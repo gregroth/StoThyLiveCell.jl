@@ -1,5 +1,3 @@
-using LinearAlgebra
-using ExponentialUtilities
 
 
 """
@@ -13,12 +11,7 @@ struct StandardStoModel
 end
 
 
-"""
-$(TYPEDEF)
-"""
-struct StoModel
-    P::Array{Float64,2} #transition probability matrix (nbstate x (maxrna+1))^2
-end
+
 
 """
     StoModel(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64)
@@ -40,9 +33,8 @@ function StoModel(model::StandardStoModel, parameters::Vector{Float64},kini::Flo
         Q[model.nbstate+i,i] = delta
     end 
     
-    Q = exp(Q)
- 
-    StoModel(kini,delta,P)
+    return exp(Q)
 end
+
 
 
