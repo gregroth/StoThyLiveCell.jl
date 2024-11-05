@@ -3,6 +3,12 @@ uuid = "c209c10c-a2a7-4006-b072-270167cfcc8e"
 authors = ["Gregory Roth"]
 version = "1.0.0-DEV"
 
+[deps]
+DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+ExponentialUtilities = "d4d017d3-3776-5f7e-afef-a10c40355c18"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
 [compat]
 julia = "1.6.7"
 
