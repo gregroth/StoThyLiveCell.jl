@@ -42,16 +42,37 @@ using Test
     @test survivalspot_model[10] ≈  0.024598091184660095
 end
 
-@testset "Test single output fcts" begin
-    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off) = mo_basics(model1, parameters,kini,delta, maxrna) 
+#@testset "Test single output fcts" begin
+    Qstate = [0    8    4    0    0    0;
+                7    0    0    4    0    0;
+                3    0    0    8    2    0;
+                0    3    6    0    0    2;
+                0    0    1    0    0    8;
+                0    0    0    1    5    0]
+    paramToRate_idx = findall(Qstate .>0)
+    paramToRate_val = Qstate[findall(Qstate .>0)]
+    model1 = StoThyLiveCell.StandardStoModel(6,8,paramToRate_idx,paramToRate_val,[1,3,5])
 
-    mnascent_s = mo_mnascent(ssp, maxrna, stateTr, model1.nbstate) 
-    survivalon_s = mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
-    survivaloff_s = mo_offtime(P, ssp,stateAbs_on, weightsTr_off,timevec)
-    survivalnb_s = mo_nextbursttime(ssp,stateAbs_on,timevec)
-    pburst_s = mo_pon(ssp,stateTr_on)
-    corr_s = mo_interburstcorr(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
-    avgint_s =mo_avgintensity(P, sspTr_off,stateAbs_on, stateTr_on,timevec_intensity, nbstate, maxrna)
+    #creating an instance 
+    parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387]
+    kini = 3.80846
+    delta = 1.
+    maxrna = 25
+
+    P1 = StoThyLiveCell.StoModel(model1, parameters,kini,delta, maxrna)
+
+    timevec = 1:1:200
+    timevec_on = 1:1:10
+    timevec_intensity = 1:1:20
+        (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters,kini,delta, maxrna) 
+
+    mnascent_s = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate) 
+    survivalon_s = StoThyLiveCell.mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
+    survivaloff_s = StoThyLiveCell.mo_offtime(PabsOff, weightsTr_off,timevec)
+    survivalnb_s = StoThyLiveCell.mo_nextbursttime(sspTr_off,PabsOff,timevec)
+    pburst_s = StoThyLiveCell.mo_pon(ssp,stateTr_on)
+    corr_s = StoThyLiveCell.mo_interburstcorr(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
+    avgint_s =StoThyLiveCell.mo_avgintensity(P,Pabs, sspTr_off,stateAbs_on, stateTr_on,timevec_intensity, model1.nbstate, maxrna)
     @test mnascentmrna_model ≈ mnascent_s
     @test pburst_model ≈ pburst_s
     @test corr_interburst_model ≈ corr_s
@@ -63,7 +84,7 @@ end
     @test survivaldark_model[200] ≈   survivaloff_s[200]
     @test survivalspot_model[1] ≈ survivalon_s[1]
     @test survivalspot_model[10] ≈  survivalon_s[10]
-end
+#end
 #= @testset "StoThyLiveCell.jl" begin
     # Write your tests here.
 end
