@@ -41,6 +41,22 @@ using Test
     @test survivalspot_model[1] ≈ 0.742997360615419
     @test survivalspot_model[10] ≈  0.024598091184660095
 end
+
+@testset "Test single output fcts" begin
+   
+
+    @test mnascentmrna_model ≈ 3.0337754651143656
+    @test pburst_model ≈ 0.16568033517579464
+    @test corr_interburst_model ≈ 0.10866194618122918
+    @test intensity_model[1] ≈ 1.9075373067561898
+    @test intensity_model[20] ≈ 0.0021212008496347893
+    @test survivalnextburst_model[1] ≈ 0.9409352782206553
+    @test survivalnextburst_model[200] ≈  0.0020411810555407066
+    @test survivaldark_model[1] ≈ 0.8346193347912076
+    @test survivaldark_model[200] ≈  0.0010301814686152551
+    @test survivalspot_model[1] ≈ 0.742997360615419
+    @test survivalspot_model[10] ≈  0.024598091184660095
+end
 #= @testset "StoThyLiveCell.jl" begin
     # Write your tests here.
 end

@@ -110,6 +110,26 @@ function ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::
     return  mnascentmrna_model, pburst_model, survivalspot_model_full,survivaldark_model_full, survivalnextburst_model, corr_interburst, intensity_model
 end
 
+
+"""
+    mo_basics(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int)
+
+return important vectors and matrices used in the analysis of the model
+"""
+function mo_basics(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int) 
+    P = StoModel(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int)
+    evs = eigvecs(P')
+    ssp = real.(evs[:,end]./sum(evs[:,end]))
+    stateTr = [x for x in 2*model.nbstate+1 :(maxrna+1)*model.nbstate]
+    stateTr_on = [x for x in model.nbstate+1 :(maxrna+1)*model.nbstate]
+    stateAbs_on = [x for x in 1 : model.nbstate]
+    weightsAbs_off = ssp[stateTr_on]./sum(ssp[stateTr_on])
+    weightsTr_off = weightsAbs_off' * P[stateTr_on,stateAbs_on]./sum(weightsAbs_off' * P[stateTr_on,stateAbs_on])
+
+    return P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off
+end
+
+
 """
     mo_mnascent(ssp::Vector{Float64}, maxrna::Int, stateTr::Vector{Int}, nbstate::Int)
 
@@ -147,10 +167,7 @@ end
 
 return the off time survival probabilities
 """
-function mo_offtime(P::Array{Float64,2}, ssp::Vector{Float64},stateTr_off::Vector{Int}, stateAbs_off::Vector{Int},timevec_off::Vector{Int}) 
-    weightsAbs_off = ssp[stateAbs_off]./sum(ssp[stateAbs_off])
-    weightsTr_off = weightsAbs_off' * P[stateAbs_off,stateTr_off]./sum(weightsAbs_off' * P[stateAbs_off,stateTr_off])
-
+function mo_offtime(P::Array{Float64,2}, ssp::Vector{Float64},stateTr_off::Vector{Int}, weightsTr_off::Vector{Float64},timevec_off::Vector{Int}) 
     PabsOff = P[stateTr_off,stateTr_off]
     tempdist = weightsTr_off
     survivaldark_model_full = Vector{T}(undef,maximum(timevec_off))
