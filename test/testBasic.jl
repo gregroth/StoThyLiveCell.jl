@@ -32,8 +32,8 @@ using Test
     @test mnascentmrna_model ≈ 3.0337754651143656
     @test pburst_model ≈ 0.16568033517579464
     @test corr_interburst_model ≈ 0.10866194618122918
-    @test intensity_model[1] ≈ 1.9075373067561898
-    @test intensity_model[20] ≈ 0.0021212008496347893
+    @test intensity_model[1] ≈ 1
+    @test intensity_model[20] ≈ 0.0021212008496347893/1.9075373067561898
     @test survivalnextburst_model[1] ≈ 0.9409352782206553
     @test survivalnextburst_model[200] ≈  0.0020411810555407066
     @test survivaldark_model[1] ≈ 0.8346193347912076
@@ -42,7 +42,7 @@ using Test
     @test survivalspot_model[10] ≈  0.024598091184660095
 end
 
-#@testset "Test single output fcts" begin
+@testset "Test single output fcts" begin
     Qstate = [0    8    4    0    0    0;
                 7    0    0    4    0    0;
                 3    0    0    8    2    0;
@@ -64,7 +64,10 @@ end
     timevec = 1:1:200
     timevec_on = 1:1:10
     timevec_intensity = 1:1:20
-        (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters,kini,delta, maxrna) 
+    
+    (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst_model, intensity_model) =  ModelOutput(model1, parameters,kini,delta, maxrna,timevec_on[end],timevec[end],timevec[end],timevec_intensity[end])
+
+    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters,kini,delta, maxrna) 
 
     mnascent_s = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate) 
     survivalon_s = StoThyLiveCell.mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
@@ -84,8 +87,50 @@ end
     @test survivaldark_model[200] ≈   survivaloff_s[200]
     @test survivalspot_model[1] ≈ survivalon_s[1]
     @test survivalspot_model[10] ≈  survivalon_s[10]
-#end
-#= @testset "StoThyLiveCell.jl" begin
-    # Write your tests here.
 end
- =#
+
+@testset "Test single for only on/off" begin
+    Qstate = [0    8    4    0    0    0;
+                7    0    0    4    0    0;
+                3    0    0    8    2    0;
+                0    3    6    0    0    2;
+                0    0    1    0    0    8;
+                0    0    0    1    5    0]
+    paramToRate_idx = findall(Qstate .>0)
+    paramToRate_val = Qstate[findall(Qstate .>0)]
+    model1 = StoThyLiveCell.StandardStoModel(6,8,paramToRate_idx,paramToRate_val,[1,3,5])
+
+    #creating an instance 
+    parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387]
+    kini = 3.80846
+    delta = 1.
+    maxrna = 25
+
+
+    timevec = 1:1:200
+    timevec_on = 1:1:10
+    timevec_intensity = 1:1:20
+    
+ 
+    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters,kini,delta, maxrna) 
+    mnascent_s = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate) 
+    survivalon_s = StoThyLiveCell.mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
+    survivaloff_s = StoThyLiveCell.mo_offtime(PabsOff, weightsTr_off,timevec)
+    pburst_s = StoThyLiveCell.mo_pon(ssp,stateTr_on)
+    corr_s = StoThyLiveCell.mo_interburstcorr(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
+
+   StoThyLiveCell.mo_basics!(model1, parameters,kini,delta, maxrna,P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff) 
+    mnascent_s2 = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate) 
+    survivalon_s2 = StoThyLiveCell.mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
+    survivaloff_s2 = StoThyLiveCell.mo_offtime(PabsOff, weightsTr_off,timevec)
+    pburst_s2 = StoThyLiveCell.mo_pon(ssp,stateTr_on)
+    corr_s2 = StoThyLiveCell.mo_interburstcorr(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
+
+    @test mnascent_s ≈ mnascent_s2
+    @test pburst_s≈ pburst_s2
+    @test  corr_s ≈ corr_s2
+    @test survivaloff_s[1] ≈  survivaloff_s2[1]
+    @test survivaloff_s[200] ≈   survivaloff_s2[200]
+    @test survivalon_s[1] ≈ survivalon_s2[1]
+    @test survivalon_s[10] ≈  survivalon_s2[10]
+end

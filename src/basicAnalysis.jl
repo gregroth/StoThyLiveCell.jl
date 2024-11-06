@@ -2,13 +2,13 @@
     ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64,tmaxon,tmaxoff,tmaxnextburst,tmaxInt64ensity)
 
 Return the main outputs of the model: mean nb of nascent mrna, probability to observe a burst, ON time survival,
-OFF time survival,next burst time survival, correlation of consecutive Int64er burst evts, average Int64ensity track
+OFF time survival,next burst time survival, correlation of consecutive inter burst evts, average intensity track
 """
-function ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64,tmaxon,tmaxoff,tmaxnextburst,tmaxInt64ensity) 
+function ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64) 
     timevec_on = 1:1:tmaxon
     timevec_off = 1:1:tmaxoff
     timevec_nextburst = 1:1:tmaxnextburst
-    timevec_Int64ensity = 1:1:tmaxInt64ensity
+    timevec_intensity = 1:1:tmaxintensity
     #model instance
     P = StoModel(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64)
     
@@ -64,7 +64,7 @@ function ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::
     #probability to observer a burst
     pburst_model = sum(ssp[stateTr_on]) 
 
-    #correlation of the Int64erburst durations
+    #correlation of the interburst durations
     Qn = P[stateAbs_on,stateAbs_on]
     Rn = P[stateAbs_on,stateTr_on]
 
@@ -91,23 +91,23 @@ function ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::
     M2T = weightsTr_off*(2*Nn-I)*Nn*c
     VarT = M2T[1] - Et1[1]^2
     
-    corr_Int64erburst = (cortemp-Et1[1]^2)/VarT
+    corr_interburst = (cortemp-Et1[1]^2)/VarT
 
-    #average Int64ensity track 
+    #average intensity track 
     weightsON = sspTr_off' * P[stateTr_off,stateAbs_off]./sum(sspTr_off' * P[stateTr_off,stateAbs_off])
  
     rnanbvec_on = vcat(kron([x for x in 1:maxrna],ones(model.nbstate)))
 
     Pabs = Qb
 
-    Int64ensitytemp = weightsON
-    Int64ensity_model = Vector{Float64}(undef,length(timevec_Int64ensity))
-    for i in eachindex(timevec_Int64ensity)
-        Int64ensity_model[i] = (Int64ensitytemp*rnanbvec_on)[1]
-        Int64ensitytemp = Int64ensitytemp* Pabs
+    intensitytemp = weightsON
+    intensity_model = Vector{Float64}(undef,length(timevec_intensity))
+    for i in eachindex(timevec_intensity)
+        intensity_model[i] = (intensitytemp*rnanbvec_on)[1]
+        intensitytemp = intensitytemp* Pabs
     end 
-
-    return  mnascentmrna_model, pburst_model, survivalspot_model_full,survivaldark_model_full, survivalnextburst_model, corr_Int64erburst, Int64ensity_model
+    intensity_model .= intensity_model./intensity_model[1] 
+    return  mnascentmrna_model, pburst_model, survivalspot_model_full,survivaldark_model_full, survivalnextburst_model, corr_interburst, intensity_model
 end
 
 
@@ -155,7 +155,7 @@ end
 
 change vector and matrices used in on and off time; mean nascent rna, p_on, correlation, next burst survival
 """
-function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vecotr{Float64}) 
+function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}) 
     P .= StoModel(model, parameters,kini,delta, maxrna)
     evs = eigvecs(P')
     ssp .= real.(evs[:,end]./sum(evs[:,end]))
@@ -173,7 +173,7 @@ end
 
 change vector and matrices used in ALL the statistics
 """
-function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vecotr{Float64}, Pabs::Array{Float64,2}) 
+function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}, Pabs::Array{Float64,2}) 
     P .= StoModel(model, parameters,kini,delta, maxrna)
     evs = eigvecs(P')
     ssp .= real.(evs[:,end]./sum(evs[:,end]))
@@ -215,7 +215,7 @@ function mo_ontime(P::Array{Float64,2}, ssp::Vector{Float64},stateTr_on::Vector{
         tempdist = tempdist* PabsOn
         survivalspot_model_full[i] = sum(tempdist)
     end 
-    return survivalspot_model_full[timevec_on]./survivalspot_model_full[1]
+    return survivalspot_model_full[timevec_on]
 
 end
 
