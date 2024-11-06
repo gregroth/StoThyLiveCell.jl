@@ -43,19 +43,26 @@ using Test
 end
 
 @testset "Test single output fcts" begin
-   
+    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off) = mo_basics(model1, parameters,kini,delta, maxrna) 
 
-    @test mnascentmrna_model ≈ 3.0337754651143656
-    @test pburst_model ≈ 0.16568033517579464
-    @test corr_interburst_model ≈ 0.10866194618122918
-    @test intensity_model[1] ≈ 1.9075373067561898
-    @test intensity_model[20] ≈ 0.0021212008496347893
-    @test survivalnextburst_model[1] ≈ 0.9409352782206553
-    @test survivalnextburst_model[200] ≈  0.0020411810555407066
-    @test survivaldark_model[1] ≈ 0.8346193347912076
-    @test survivaldark_model[200] ≈  0.0010301814686152551
-    @test survivalspot_model[1] ≈ 0.742997360615419
-    @test survivalspot_model[10] ≈  0.024598091184660095
+    mnascent_s = mo_mnascent(ssp, maxrna, stateTr, model1.nbstate) 
+    survivalon_s = mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
+    survivaloff_s = mo_offtime(P, ssp,stateAbs_on, weightsTr_off,timevec)
+    survivalnb_s = mo_nextbursttime(ssp,stateAbs_on,timevec)
+    pburst_s = mo_pon(ssp,stateTr_on)
+    corr_s = mo_interburstcorr(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
+    avgint_s =mo_avgintensity(P, sspTr_off,stateAbs_on, stateTr_on,timevec_intensity, nbstate, maxrna)
+    @test mnascentmrna_model ≈ mnascent_s
+    @test pburst_model ≈ pburst_s
+    @test corr_interburst_model ≈ corr_s
+    @test intensity_model[1] ≈ avgint_s[1]
+    @test intensity_model[20] ≈ avgint_s[20]
+    @test survivalnextburst_model[1] ≈ survivalnb_s[1]
+    @test survivalnextburst_model[200] ≈  survivalnb_s[200]
+    @test survivaldark_model[1] ≈  survivaloff_s[1]
+    @test survivaldark_model[200] ≈   survivaloff_s[200]
+    @test survivalspot_model[1] ≈ survivalon_s[1]
+    @test survivalspot_model[10] ≈  survivalon_s[10]
 end
 #= @testset "StoThyLiveCell.jl" begin
     # Write your tests here.

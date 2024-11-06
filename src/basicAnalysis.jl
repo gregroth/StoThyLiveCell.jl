@@ -248,11 +248,12 @@ end
 
 return the mean track intensity, normalized to 1
 """
-function mo_avgintensity(P::Array{Float64,2},Pabs::Array{Float64,2}, sspTr_off::Vector{Float64},stateTr_off::Vector{Int}, stateAbs_off::Vector{Int},timevec_intensity::Vector{Int}, nbstate::Int, maxrna::Int) 
+function mo_avgintensity(P::Array{Float64,2}, sspTr_off::Vector{Float64},stateTr_off::Vector{Int}, stateAbs_off::Vector{Int},timevec_intensity::Vector{Int}, nbstate::Int, maxrna::Int) 
     weightsON = sspTr_off' * P[stateTr_off,stateAbs_off]./sum(sspTr_off' * P[stateTr_off,stateAbs_off])
  
     rnanbvec_on = vcat(kron([x for x in 1:maxrna],ones(nbstate)))
 
+    Pabs = P[stateTr_on,stateTr_on]
     intensitytemp = weightsON
     intensity_model = Vector{Float64}(undef,length(timevec_intensity))
     for i in eachindex(timevec_intensity)
