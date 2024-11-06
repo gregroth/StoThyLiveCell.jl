@@ -316,3 +316,20 @@ function mo_avgintensity(P::Array{Float64,2}, Pabs::Array{Float64,2}, sspTr_off:
     end 
     return intensity_model./maximum(intensity_model)
 end
+
+
+"""
+    mo_rna(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64)
+
+return mRNA distribution for model with parameters
+"""
+function mo_rna(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64) 
+    P = StoModel(model, parameters,kini,delta, maxrna)
+    evs = eigvecs(P')
+    ssp = real.(evs[:,end]./sum(evs[:,end]))
+    
+    ssd_rna = ssp'kron(diagm(ones(maxrna+1)), ones(model.nbstate))
+    ssd_rna[ssd_rna .<=0] .= 1e-9 
+    return ssd_rna
+end
+
