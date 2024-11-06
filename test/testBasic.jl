@@ -134,3 +134,37 @@ end
     @test survivalon_s[1] ≈ survivalon_s2[1]
     @test survivalon_s[10] ≈  survivalon_s2[10]
 end
+
+
+@testset "Test single for only nextburst" begin
+    Qstate = [0    8    4    0    0    0;
+                7    0    0    4    0    0;
+                3    0    0    8    2    0;
+                0    3    6    0    0    2;
+                0    0    1    0    0    8;
+                0    0    0    1    5    0]
+    paramToRate_idx = findall(Qstate .>0)
+    paramToRate_val = Qstate[findall(Qstate .>0)]
+    model1 = StoThyLiveCell.StandardStoModel(6,8,paramToRate_idx,paramToRate_val,[1,3,5])
+
+    #creating an instance 
+    parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387]
+    kini = 3.80846
+    delta = 1.
+    maxrna = 25
+
+
+    timevec = 1:1:200
+    timevec_on = 1:1:10
+    timevec_intensity = 1:1:20
+    
+ 
+    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters,kini,delta, maxrna) 
+    survivalnb_s = StoThyLiveCell.mo_nextbursttime(sspTr_off,PabsOff,timevec)
+
+    StoThyLiveCell.mo_basics!(model1, parameters,kini,delta, maxrna,P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff,sspTr_off) 
+    survivalnb_s2 = StoThyLiveCell.mo_nextbursttime(sspTr_off,PabsOff,timevec)
+
+    @test survivalnb_s[1] ≈  survivalnb_s2[1]
+
+end
