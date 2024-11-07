@@ -1,4 +1,21 @@
 """
+    normalizemat!(A::Array{Float64,2})
+
+return the matrix normilized by its sum
+"""
+function normalizemat!(A::Array{Float64,2})
+    A .= A./sum(A)
+end
+
+"""
+    normalizemat!(A::Vector{Float64})
+
+return the vector normilized by its sum
+"""
+function normalizemat!(A::Vector{Float64})
+    A .= A./sum(A)
+end
+"""
     ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64,tmaxon,tmaxoff,tmaxnextburst,tmaxInt64ensity)
 
 Return the main outputs of the model: mean nb of nascent mrna, probability to observe a burst, ON time survival,
@@ -119,14 +136,14 @@ return important vectors and matrices used in the analysis of the model
 function mo_basics(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64) 
     P = StoModel(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64)
     evs = eigvecs(P')
-    ssp = real.(evs[:,end]./sum(evs[:,end]))
+    ssp = normalizemat(real.(evs[:,end]))
     stateTr = [x for x in 2*model.nbstate+1 :(maxrna+1)*model.nbstate]
     stateTr_on = [x for x in model.nbstate+1 :(maxrna+1)*model.nbstate]
     stateAbs_on = [x for x in 1 : model.nbstate]
-    weightsAbs_off = ssp[stateTr_on]./sum(ssp[stateTr_on])
-    weightsTr_off = weightsAbs_off' * P[stateTr_on,stateAbs_on]./sum(weightsAbs_off' * P[stateTr_on,stateAbs_on])
+    weightsAbs_off = normalizemat(ssp[stateTr_on])
+    weightsTr_off = normalizemat(weightsAbs_off' * P[stateTr_on,stateAbs_on])
     PabsOff = P[stateAbs_on,stateAbs_on]
-    sspTr_off =ssp[stateAbs_on]./sum(ssp[stateAbs_on]) 
+    sspTr_off =normalizemat(ssp[stateAbs_on])
     Pabs = P[stateTr_on,stateTr_on]
     return P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off, Pabs
 end
@@ -141,9 +158,9 @@ change vector and matrices used in on and off time; mean nascent rna, p_on, corr
 function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}) 
     P .= StoModel(model, parameters,kini,delta, maxrna)
     evs = eigvecs(P')
-    ssp .= real.(evs[:,end]./sum(evs[:,end]))
-    weightsAbs_off = ssp[stateTr_on]./sum(ssp[stateTr_on])
-    weightsTr_off .= weightsAbs_off' * P[stateTr_on,stateAbs_on]./sum(weightsAbs_off' * P[stateTr_on,stateAbs_on])
+    ssp .= normalizemat(real.(evs[:,end]))
+    weightsAbs_off = normalizemat(ssp[stateTr_on])
+    weightsTr_off .= normalizemat(weightsAbs_off' * P[stateTr_on,stateAbs_on])
     PabsOff .= P[stateAbs_on,stateAbs_on]
 end
 
@@ -155,11 +172,11 @@ change vector and matrices used in on and off time; mean nascent rna, p_on, corr
 function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}) 
     P .= StoModel(model, parameters,kini,delta, maxrna)
     evs = eigvecs(P')
-    ssp .= real.(evs[:,end]./sum(evs[:,end]))
-    weightsAbs_off = ssp[stateTr_on]./sum(ssp[stateTr_on])
-    weightsTr_off .= weightsAbs_off' * P[stateTr_on,stateAbs_on]./sum(weightsAbs_off' * P[stateTr_on,stateAbs_on])
+    ssp .= normalizemat(real.(evs[:,end]))
+    weightsAbs_off = normalizemat(ssp[stateTr_on])
+    weightsTr_off .= normalizemat(weightsAbs_off' * P[stateTr_on,stateAbs_on])
     PabsOff .= P[stateAbs_on,stateAbs_on]
-    sspTr_off .= ssp[stateAbs_on]./sum(ssp[stateAbs_on]) 
+    sspTr_off .= normalizemat(ssp[stateAbs_on])
 end
 
 """
@@ -170,11 +187,11 @@ change vector and matrices used in ALL the statistics
 function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64},  stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}, Pabs::Array{Float64,2}) 
     P .= StoModel(model, parameters,kini,delta, maxrna)
     evs = eigvecs(P')
-    ssp .= real.(evs[:,end]./sum(evs[:,end]))
-    weightsAbs_off = ssp[stateTr_on]./sum(ssp[stateTr_on])
-    weightsTr_off .= weightsAbs_off' * P[stateTr_on,stateAbs_on]./sum(weightsAbs_off' * P[stateTr_on,stateAbs_on])
+    ssp .= normalizemat(real.(evs[:,end]))
+    weightsAbs_off = normalizemat(ssp[stateTr_on])
+    weightsTr_off .= normalizemat(weightsAbs_off' * P[stateTr_on,stateAbs_on])
     PabsOff .= P[stateAbs_on,stateAbs_on]
-    sspTr_off .= ssp[stateAbs_on]./sum(ssp[stateAbs_on])
+    sspTr_off .= normalizemat(ssp[stateAbs_on])
     Pabs .= P[stateTr_on,stateTr_on]
 end
 
@@ -298,7 +315,7 @@ end
 return the mean track intensity, normalized to 1
 """
 function mo_avgintensity(P::Array{Float64,2}, Pabs::Array{Float64,2}, sspTr_off::Vector{Float64},stateTr_off::Vector{Int64}, stateAbs_off::Vector{Int64},timevec_intensity::StepRange{Int64,Int64}, nbstate::Int64, maxrna::Int64) 
-    weightsON = sspTr_off' * P[stateTr_off,stateAbs_off]./sum(sspTr_off' * P[stateTr_off,stateAbs_off])
+    weightsON = normalizemat(sspTr_off' * P[stateTr_off,stateAbs_off])
  
     rnanbvec_on = vcat(kron([x for x in 1:maxrna],ones(nbstate)))
 
@@ -320,7 +337,7 @@ return mRNA distribution for model with parameters
 function mo_rna(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64) 
     P = StoModel(model, parameters,kini,delta, maxrna)
     evs = eigvecs(P')
-    ssp = real.(evs[:,end]./sum(evs[:,end]))
+    ssp = normalizemat(real.(evs[:,end]))
     
     ssd_rna = ssp'kron(diagm(ones(maxrna+1)), ones(model.nbstate))
     ssd_rna[ssd_rna .<=0] .= 1e-9 
