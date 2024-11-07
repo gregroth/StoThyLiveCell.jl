@@ -259,11 +259,11 @@ return the correlation between two consecutive inter-burst events
 """
 function mo_interburstcorr(P::Array{Float64,2}, weightsTr_off::Array{Float64,2},stateAbs_on::Vector{Int64}, stateTr_on::Vector{Int64}, timehorizon::Int64) 
     #correlation of the interburst durations
-    Qn = P[stateAbs_on,stateAbs_on]
-    Rn = P[stateAbs_on,stateTr_on]
+    Qn = @view(P[stateAbs_on,stateAbs_on])
+    Rn = @view(P[stateAbs_on,stateTr_on])
 
-    Qb = P[stateTr_on,stateTr_on]
-    Rb = P[stateTr_on,stateAbs_on]
+    Qb = @view(P[stateTr_on,stateTr_on])
+    Rb = @view(P[stateTr_on,stateAbs_on])
     c = ones(length(stateAbs_on))
 
     Nn = (I - Qn)^(-1)
@@ -271,12 +271,15 @@ function mo_interburstcorr(P::Array{Float64,2}, weightsTr_off::Array{Float64,2},
 
     cortemp=0
     wpre = weightsTr_off
+    wpre2 = wpre*Rn./sum(wpre)
+    wpre3 = wpre2*Nb*Rb./sum(wpre2)
+    ET2t = wpre3*Nn*c 
     for t=1:timehorizon
-        wpre2 = wpre*Rn./sum(wpre)
-        wpre3 = wpre2*Nb*Rb./sum(wpre2)
-        ET2t = wpre3*Nn*c 
         cortemp = cortemp + t*ET2t[1]*sum(wpre*Rn)
-        wpre = wpre*Qn
+        wpre .= wpre*Qn
+        wpre2 .= wpre*Rn./sum(wpre)
+        wpre3 .= wpre2*Nb*Rb./sum(wpre2)
+        ET2t .= wpre3*Nn*c 
         if sum(wpre)<1e-6
             break
         end
