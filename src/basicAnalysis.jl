@@ -138,13 +138,10 @@ end
 
 change vector and matrices used in on and off time; mean nascent rna, p_on, correlation
 """
-function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}) 
+function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}) 
     P .= StoModel(model, parameters,kini,delta, maxrna)
     evs = eigvecs(P')
     ssp .= real.(evs[:,end]./sum(evs[:,end]))
-    stateTr .= [x for x in 2*model.nbstate+1 :(maxrna+1)*model.nbstate]
-    stateTr_on .= [x for x in model.nbstate+1 :(maxrna+1)*model.nbstate]
-    stateAbs_on .= [x for x in 1 : model.nbstate]
     weightsAbs_off = ssp[stateTr_on]./sum(ssp[stateTr_on])
     weightsTr_off .= weightsAbs_off' * P[stateTr_on,stateAbs_on]./sum(weightsAbs_off' * P[stateTr_on,stateAbs_on])
     PabsOff .= P[stateAbs_on,stateAbs_on]
@@ -155,13 +152,10 @@ end
 
 change vector and matrices used in on and off time; mean nascent rna, p_on, correlation, next burst survival
 """
-function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}) 
+function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}) 
     P .= StoModel(model, parameters,kini,delta, maxrna)
     evs = eigvecs(P')
     ssp .= real.(evs[:,end]./sum(evs[:,end]))
-    stateTr .= [x for x in 2*model.nbstate+1 :(maxrna+1)*model.nbstate]
-    stateTr_on .= [x for x in model.nbstate+1 :(maxrna+1)*model.nbstate]
-    stateAbs_on .= [x for x in 1 : model.nbstate]
     weightsAbs_off = ssp[stateTr_on]./sum(ssp[stateTr_on])
     weightsTr_off .= weightsAbs_off' * P[stateTr_on,stateAbs_on]./sum(weightsAbs_off' * P[stateTr_on,stateAbs_on])
     PabsOff .= P[stateAbs_on,stateAbs_on]
@@ -173,13 +167,10 @@ end
 
 change vector and matrices used in ALL the statistics
 """
-function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}, Pabs::Array{Float64,2}) 
+function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64},  stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}, Pabs::Array{Float64,2}) 
     P .= StoModel(model, parameters,kini,delta, maxrna)
     evs = eigvecs(P')
     ssp .= real.(evs[:,end]./sum(evs[:,end]))
-    stateTr .= [x for x in 2*model.nbstate+1 :(maxrna+1)*model.nbstate]
-    stateTr_on .= [x for x in model.nbstate+1 :(maxrna+1)*model.nbstate]
-    stateAbs_on .= [x for x in 1 : model.nbstate]
     weightsAbs_off = ssp[stateTr_on]./sum(ssp[stateTr_on])
     weightsTr_off .= weightsAbs_off' * P[stateTr_on,stateAbs_on]./sum(weightsAbs_off' * P[stateTr_on,stateAbs_on])
     PabsOff .= P[stateAbs_on,stateAbs_on]
