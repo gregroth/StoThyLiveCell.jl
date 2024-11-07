@@ -259,11 +259,11 @@ return the correlation between two consecutive inter-burst events
 """
 function mo_interburstcorr(P::Array{Float64,2}, weightsTr_off::Array{Float64,2},stateAbs_on::Vector{Int64}, stateTr_on::Vector{Int64}, timehorizon::Int64) 
     #correlation of the interburst durations
-    Qn = @view(P[stateAbs_on,stateAbs_on])
-    Rn = @view(P[stateAbs_on,stateTr_on])
+    Qn = P[stateAbs_on,stateAbs_on]
+    Rn = P[stateAbs_on,stateTr_on]
 
-    Qb = @view(P[stateTr_on,stateTr_on])
-    Rb = @view(P[stateTr_on,stateAbs_on])
+    Qb = P[stateTr_on,stateTr_on]
+    Rb = P[stateTr_on,stateAbs_on]
     c = ones(length(stateAbs_on))
 
     Nn = (I - Qn)^(-1)
