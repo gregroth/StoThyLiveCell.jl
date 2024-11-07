@@ -15,6 +15,13 @@ return the vector normilized by its sum
 function normalizemat!(A::Vector{Float64})
     A .= A./sum(A)
 end
+
+
+function correlationutilil()
+    wpre = wpre*Qn
+    wpre2 = wpre*Qn*Rn
+    ET2t = wpre*Rn*wpre2*Nb*Rb*Nn*c ./(sum(wpre)*sum(wpre2))
+end
 """
     ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64,tmaxon,tmaxoff,tmaxnextburst,tmaxInt64ensity)
 
@@ -286,23 +293,27 @@ function mo_interburstcorr(P::Array{Float64,2}, weightsTr_off::Array{Float64,2},
     Nn = (I - Qn)^(-1)
     Nb = (I - Qb)^(-1)
 
+    NR = Nb*Rb
+    Nc = Nn*c
+
     cortemp=0
     wpre = weightsTr_off
-    wpre2 = wpre*Rn./sum(wpre)
-    wpre3 = wpre2*Nb*Rb./sum(wpre2)
-    ET2t = wpre3*Nn*c 
+    wpre2 = normalizemat!(wpre)*Rn
+    wpre3 = normalizemat!(wpre2)*NR
+    ET2t = wpre3*Nc 
+
     for t=1:timehorizon
         cortemp = cortemp + t*ET2t[1]*sum(wpre*Rn)
         wpre = wpre*Qn
-        wpre2 = wpre*Rn./sum(wpre)
-        wpre3 = wpre2*Nb*Rb./sum(wpre2)
-        ET2t = wpre3*Nn*c 
+        wpre2 = normalizemat!(wpre)*Rn
+        wpre3 = normalizemat!(wpre2)*NR
+        ET2t = wpre3*Nc 
         if sum(wpre)<1e-6
             break
         end
     end
-    Et1 = weightsTr_off*Nn*c 
-    M2T = weightsTr_off*(2*Nn-I)*Nn*c
+    Et1 = weightsTr_off*Nc 
+    M2T = weightsTr_off*(2*Nn-I)*Nc
     VarT = M2T[1] - Et1[1]^2
 
     return (cortemp-Et1[1]^2)/VarT
