@@ -153,11 +153,11 @@ end
 
 
 """
-    mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2})
+    mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2})
 
 change vector and matrices used in on and off time; mean nascent rna, p_on, correlation
 """
-function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}) 
+function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}) 
     P .= StoModel(model, parameters,kini,delta, maxrna)
     evs = eigvecs(P')
     ssp .= normalizemat!(real.(evs[:,end]))
@@ -167,11 +167,11 @@ function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::F
 end
 
 """
-    mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vecotr{Float64})
+    mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vecotr{Float64})
 
 change vector and matrices used in on and off time; mean nascent rna, p_on, correlation, next burst survival
 """
-function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}) 
+function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}) 
     P .= StoModel(model, parameters,kini,delta, maxrna)
     evs = eigvecs(P')
     ssp .= normalizemat!(real.(evs[:,end]))
@@ -182,11 +182,11 @@ function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::F
 end
 
 """
-    mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vecotr{Float64}, Pabs::Array{Float64,2})
+    mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vecotr{Float64}, Pabs::Array{Float64,2})
 
 change vector and matrices used in ALL the statistics
 """
-function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64},  stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Array{Float64,2},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}, Pabs::Array{Float64,2}) 
+function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64},  stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}, Pabs::Array{Float64,2}) 
     P .= StoModel(model, parameters,kini,delta, maxrna)
     evs = eigvecs(P')
     ssp .= normalizemat!(real.(evs[:,end]))
@@ -234,7 +234,7 @@ end
 
 return the off time survival probabilities
 """
-function mo_offtime(PabsOff::Array{Float64,2}, weightsTr_off::Array{Float64,2},timevec_off::StepRange{Int64,Int64}) 
+function mo_offtime(PabsOff::Array{Float64,2}, weightsTr_off::Vector{Float64},timevec_off::StepRange{Int64,Int64}) 
     tempdist = weightsTr_off
     survivaldark_model_full = Vector{Float64}(undef,maximum(timevec_off))
     for i in 1:maximum(timevec_off)
@@ -276,7 +276,7 @@ end
 
 return the correlation between two consecutive inter-burst events
 """
-function mo_interburstcorr(P::Array{Float64,2}, weightsTr_off::Array{Float64,2},stateAbs_on::Vector{Int64}, stateTr_on::Vector{Int64}, timehorizon::Int64) 
+function mo_interburstcorr(P::Array{Float64,2}, weightsTr_off::Vector{Float64},stateAbs_on::Vector{Int64}, stateTr_on::Vector{Int64}, timehorizon::Int64) 
     #correlation of the interburst durations
     Qn = P[stateAbs_on,stateAbs_on]
     Rn = P[stateAbs_on,stateTr_on]
@@ -293,21 +293,21 @@ function mo_interburstcorr(P::Array{Float64,2}, weightsTr_off::Array{Float64,2},
 
     cortemp=0
     wpre = weightsTr_off
-    wpre2 = normalizemat!(wpre)*Rn
-    wpre3 = normalizemat!(wpre2)*NR
-    ET2t = wpre3*Nc 
+    wpre2 = Rn'*wpre./sum(wpre)
+    wpre3 = NR'*wpre2/sum(wpre2)
+    ET2t = Nc'*wpre3 
 
     for t=1:timehorizon
-        cortemp = cortemp + t*ET2t[1]*sum(wpre*Rn)
+        cortemp = cortemp + t*ET2t[1]*sum(Rn'*wpre)
         wpre = Qn'*wpre
-        wpre2 = Rn'*normalizemat!(wpre)
-        wpre3 = NR'*normalizemat!(wpre2)
-        ET2t = Nc'*wpre3 
+        wpre2 = Rn'*wpre./sum(wpre)
+        wpre3 = NR'*wpre2./sum(wpre2)
+        ET2t = Nc'*wpre3
         if sum(wpre)<1e-6
             break
         end
     end
-    Et1 = Nc'*weightsTr_off
+    Et1 = Nc'weightsTr_off 
     M2T = Nc'*(2*Nn'-I)*weightsTr_off
     VarT = M2T[1] - Et1[1]^2
 
@@ -321,15 +321,15 @@ end
 return the mean track intensity, normalized to 1
 """
 function mo_avgintensity(P::Array{Float64,2}, Pabs::Array{Float64,2}, sspTr_off::Vector{Float64},stateTr_off::Vector{Int64}, stateAbs_off::Vector{Int64},timevec_intensity::StepRange{Int64,Int64}, nbstate::Int64, maxrna::Int64) 
-    weightsON = normalizemat!(sspTr_off' * P[stateTr_off,stateAbs_off])
+    weightsON = normalizemat!(P[stateTr_off,stateAbs_off]'*sspTr_off)
  
     rnanbvec_on = vcat(kron([x for x in 1:maxrna],ones(nbstate)))
 
     intensitytemp = weightsON
     intensity_model = Vector{Float64}(undef,length(timevec_intensity))
     for i in eachindex(timevec_intensity)
-        intensity_model[i] = (intensitytemp*rnanbvec_on)[1]
-        intensitytemp = intensitytemp* Pabs
+        intensity_model[i] = (rnanbvec_on'*intensitytemp)[1]
+        intensitytemp =  Pabs'*intensitytemp
     end 
     return intensity_model./maximum(intensity_model)
 end
