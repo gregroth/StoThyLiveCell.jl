@@ -276,10 +276,10 @@ function mo_interburstcorr(P::Array{Float64,2}, weightsTr_off::Array{Float64,2},
     ET2t = wpre3*Nn*c 
     for t=1:timehorizon
         cortemp = cortemp + t*ET2t[1]*sum(wpre*Rn)
-        wpre .= wpre*Qn
-        wpre2 .= wpre*Rn./sum(wpre)
-        wpre3 .= wpre2*Nb*Rb./sum(wpre2)
-        ET2t .= wpre3*Nn*c 
+        wpre = wpre*Qn
+        wpre2 = wpre*Rn./sum(wpre)
+        wpre3 = wpre2*Nb*Rb./sum(wpre2)
+        ET2t = wpre3*Nn*c 
         if sum(wpre)<1e-6
             break
         end
