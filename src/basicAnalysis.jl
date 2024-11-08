@@ -172,7 +172,7 @@ function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::V
     evs = eigvecs(P')
     ssp .= normalizemat!(real.(evs[:,end]))
     weightsAbs_off = normalizemat!(ssp[stateTr_on])
-    weightsTr_off = normalizemat!(P[stateTr_on,stateAbs_on]'*weightsAbs_off)
+    weightsTr_off .= normalizemat!(P[stateTr_on,stateAbs_on]'*weightsAbs_off)
     PabsOff .= P[stateAbs_on,stateAbs_on]
 end
 
@@ -186,7 +186,7 @@ function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::V
     evs = eigvecs(P')
     ssp .= normalizemat!(real.(evs[:,end]))
     weightsAbs_off = normalizemat!(ssp[stateTr_on])
-    weightsTr_off = normalizemat!(P[stateTr_on,stateAbs_on]'*weightsAbs_off)
+    weightsTr_off .= normalizemat!(P[stateTr_on,stateAbs_on]'*weightsAbs_off)
     PabsOff .= P[stateAbs_on,stateAbs_on]
     sspTr_off .= normalizemat!(ssp[stateAbs_on])
 end
@@ -201,7 +201,7 @@ function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::V
     evs = eigvecs(P')
     ssp .= normalizemat!(real.(evs[:,end]))
     weightsAbs_off = normalizemat!(ssp[stateTr_on])
-    weightsTr_off = normalizemat!(P[stateTr_on,stateAbs_on]'*weightsAbs_off)
+    weightsTr_off .= normalizemat!(P[stateTr_on,stateAbs_on]'*weightsAbs_off)
     PabsOff .= P[stateAbs_on,stateAbs_on]
     sspTr_off .= normalizemat!(ssp[stateAbs_on])
     Pabs .= P[stateTr_on,stateTr_on]
