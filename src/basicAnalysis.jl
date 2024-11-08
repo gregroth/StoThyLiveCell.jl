@@ -18,10 +18,20 @@ end
 
 
 """
-    ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64,tmaxon,tmaxoff,tmaxnextburst,tmaxInt64ensity)
+    ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
 
 Return the main outputs of the model: mean nb of nascent mrna, probability to observe a burst, ON time survival,
 OFF time survival,next burst time survival, correlation of consecutive inter burst evts, average intensity track
+#Arguments
+- `model::StandardStoModel:` a model topology
+- `parameters::Vector{Float64}`: list of the rates of the transition between the 'promoter' states
+- `kini::Vector{Float64}`: list of the initiation rates corresponding the list of active 'promoter' states described in model.TrState 
+- `delta::Float64`: degradation/release rate
+- `maxrna::Int`: maximum number of mRNA considered in the model
+- `tmaxon::Int64`: maximum time for the ON time suvival probabilities 
+- `tmaxoff::Int64`: maximum time for the OFF time suvival probabilities 
+- `tmaxnextburst::Int64`: maximum time for the Next burst time suvival probabilities 
+- `tmaxintensity::Int64`: maximum time for the averaged track intensity 
 """
 function ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64) 
     timevec_on = 1:1:tmaxon
