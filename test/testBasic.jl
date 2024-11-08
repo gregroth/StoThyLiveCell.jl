@@ -16,7 +16,7 @@ using Test
 
     #creating an instance 
     parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387]
-    kini = 3.80846
+    kini = fill(3.80846,length(model1.TrState))
     delta = 1.
     maxrna = 25
 
@@ -55,7 +55,7 @@ end
 
     #creating an instance 
     parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387]
-    kini = 3.80846
+    kini = fill(3.80846,length(model1.TrState))
     delta = 1.
     maxrna = 25
 
@@ -102,7 +102,7 @@ end
 
     #creating an instance 
     parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387]
-    kini = 3.80846
+    kini = fill(3.80846,length(model1.TrState))
     delta = 1.
     maxrna = 25
 
@@ -149,7 +149,7 @@ end
 
     #creating an instance 
     parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387]
-    kini = 3.80846
+    kini = fill(3.80846,length(model1.TrState))
     delta = 1.
     maxrna = 25
 
