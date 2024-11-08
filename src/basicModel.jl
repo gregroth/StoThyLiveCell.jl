@@ -6,15 +6,15 @@ $(TYPEDFIELDS)
 """
 struct StandardStoModel
     "number of 'promoter' states"
-    nbstate::Int
+    nbstate::Int64
     "number of parameter, including initiation and degradation"
-    nbparameters::Int
+    nbparameters::Int64
     "list of the cartesian indices for which the rate matrix is non zero"
     ParamToRate_idx::Vector{CartesianIndex{2}}
     "list of the parameter indices corresponding to the ParamToRate_idx entries of the rate matrix"
-    ParamToRate_val::Vector{Int}
+    ParamToRate_val::Vector{Int64}
     "list of the 'promoter' states from which the initiation rate is non zero"
-    TrState::Vector{Int}
+    TrState::Vector{Int64}
 end
 
 
