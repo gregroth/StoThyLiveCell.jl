@@ -12,7 +12,7 @@ using Test
             0    0    0    1    5    0]
     paramToRate_idx = findall(Qstate .>0)
     paramToRate_val = Qstate[findall(Qstate .>0)]
-    model1 = StoThyLiveCell.StandardStoModel(6,8,paramToRate_idx,paramToRate_val,[1,3,5])
+    model1 = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5])
 
     #creating an instance 
     parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387]
@@ -51,7 +51,7 @@ end
                 0    0    0    1    5    0]
     paramToRate_idx = findall(Qstate .>0)
     paramToRate_val = Qstate[findall(Qstate .>0)]
-    model1 = StoThyLiveCell.StandardStoModel(6,8,paramToRate_idx,paramToRate_val,[1,3,5])
+    model1 = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5])
 
     #creating an instance 
     parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387]
@@ -98,7 +98,7 @@ end
                 0    0    0    1    5    0]
     paramToRate_idx = findall(Qstate .>0)
     paramToRate_val = Qstate[findall(Qstate .>0)]
-    model1 = StoThyLiveCell.StandardStoModel(6,8,paramToRate_idx,paramToRate_val,[1,3,5])
+    model1 = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5])
 
     #creating an instance 
     parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387]
@@ -145,7 +145,7 @@ end
                 0    0    0    1    5    0]
     paramToRate_idx = findall(Qstate .>0)
     paramToRate_val = Qstate[findall(Qstate .>0)]
-    model1 = StoThyLiveCell.StandardStoModel(6,8,paramToRate_idx,paramToRate_val,[1,3,5])
+    model1 = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5])
 
     #creating an instance 
     parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387]

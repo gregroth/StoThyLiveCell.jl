@@ -9,6 +9,8 @@ struct StandardStoModel
     nbstate::Int64
     "number of parameter, excluding initiation and degradation"
     nbparameters::Int64
+    "number of initiation rates"
+    nbkini::Int64
     "list of the cartesian indices for which the rate matrix is non zero"
     ParamToRate_idx::Vector{CartesianIndex{2}}
     "list of the parameter indices corresponding to the ParamToRate_idx entries of the rate matrix"
