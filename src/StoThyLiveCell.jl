@@ -3,6 +3,7 @@ module StoThyLiveCell
 using LinearAlgebra
 using ExponentialUtilities
 using DocStringExtensions
+using Plotly 
 
 include("basicModel.jl")
 include("basicAnalysis.jl")
