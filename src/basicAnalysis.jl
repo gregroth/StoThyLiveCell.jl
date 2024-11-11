@@ -135,7 +135,7 @@ function ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::
         intensity_model[i] = (intensitytemp*rnanbvec_on)[1]
         intensitytemp = intensitytemp* Pabs
     end 
-    intensity_model .= intensity_model./intensity_model[1] 
+    intensity_model .= intensity_model./maximum(intensity_model) 
     return  mnascentmrna_model, pburst_model, survivalspot_model_full,survivaldark_model_full, survivalnextburst_model, corr_interburst, intensity_model
 end
 
