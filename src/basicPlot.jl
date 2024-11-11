@@ -124,20 +124,20 @@ function plotAll(model::StandardStoModel, parameters::Vector{Float64},kini::Vect
     #plot
 
     plt_off = plot(offtimesurvival, layout_offsurvival);
-    display(plt_off)
+    #display(plt_off)
     plt_on = plot(ontimesurvival, layout_onsurvival);
-    display(plt_on)
+    #display(plt_on)
     plt_nextburst = plot(nextburstsurvival, layout_nextburstsurvial);
-    display(plt_nextburst)
+    #display(plt_nextburst)
     plt_pburst = plot(pburst, layout_pburst);
-    display(plt_pburst)
+    #display(plt_pburst)
     plt_mnasentrna = plot(mnasentrna, layout_mnascent);
-    display(plt_mnasentrna)
+    #display(plt_mnasentrna)
     plt_interburstcorr = plot(interburstcorr, layout_interburstcorr);
-    display(plt_interburstcorr)
+    #display(plt_interburstcorr)
     plt_avgintensity = plot(avgintensity, layout_intensity);
-    display(plt_avgintensity)
-
+    #display(plt_avgintensity)
+    return (offtimesurvival,ontimesurvival,nextburstsurvival,pburst,mnasentrna,interburstcorr,avgintensity)
 end
 
 
