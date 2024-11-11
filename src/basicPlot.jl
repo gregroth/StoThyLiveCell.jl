@@ -15,6 +15,15 @@ function plotAll(model::StandardStoModel, parameters::Vector{Float64},kini::Vect
     avgintensity = scatter(x=1:tmaxintensity, y=intensity_model, mode="lines", line=attr(color="black", width=3),showlegend=false);
 
     #layouts
+    lshape = "linear" #"hv"
+    fontsizeaxis = 26
+    fontsizeticks = 21
+    figurehdim = 800
+    figurevdim = 600
+    fontfamily = "helvetica"
+    graphgridcolor = "#a6a8a6"
+    axislinecolor = "black"
+    figurebgcolor = "white"
     layout_offsurvival = Layout(width=figurehdim, height=figurevdim, font_family=fontfamily, xaxis=attr(
         title_text = "time (min)",
         title_font_size=fontsizeaxis,
