@@ -17,25 +17,25 @@ struct StandardStoModel
     ParamToRate_val::Vector{Int64}
     "list of the 'promoter' states from which the initiation rate is non zero"
     TrState::Vector{Int64}
-    "list of the kini indices corresponding to the TrStates; same size than TrState"
+    "list of indices of initiation rate in the active states; same size than TrState"
     KiniToRate_idx::Vector{Int64}
+    "index of the degradation rate in the parameter vector"
+    deltaToRate_idx::Int64
 end
 
 
 
 
 """
-    StoModel(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64,maxrna::Int)
+    StoModel(model::StandardStoModel, parameters::Vector{Float64},maxrna::Int)
 
 Define a model instance based on the topology of the model.
     
 #Arguments
-- `parameters::Vector{Float64}`: list of the rates of the transition between the 'promoter' states
-- `kini::Vector{Float64}`: list of the initiation rates 
-- `delta::Float64`: degradation/release rate
+- `parameters::Vector{Float64}`: list of the all the rate parameters
 - `maxrna::Int`: maximum number of mRNA considered in the model
 """
-function StoModel(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int)
+function StoModel(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int)
     Qstate = zeros(model.nbstate,model.nbstate) 
     Q = zeros(model.nbstate*(maxrna+1),model.nbstate*(maxrna+1))
     for i in eachindex(model.ParamToRate_val)
@@ -47,10 +47,10 @@ function StoModel(model::StandardStoModel, parameters::Vector{Float64},kini::Vec
 
     for i=0:maxrna-1
         for j in eachindex(model.TrState)
-            Q[i*model.nbstate+model.TrState[j],i*model.nbstate+model.TrState[j]+model.nbstate] = kini[model.KiniToRate_idx[j]]
+            Q[i*model.nbstate+model.TrState[j],i*model.nbstate+model.TrState[j]+model.nbstate] = parameters[model.KiniToRate_idx[j]]
         end
         for j = 1:model.nbstate
-            Q[(i+1)*model.nbstate+j,i*model.nbstate+j] = delta*(i+1)
+            Q[(i+1)*model.nbstate+j,i*model.nbstate+j] = parameters[model.deltaToRate_idx]*(i+1)
         end
     end
     for i in axes(Q,1)
@@ -66,12 +66,10 @@ end
  Modify P in the transition matrix of the model model with maximum mRNA number = maxrna, 
     
 #Arguments
-- `parameters::Vector{Float64}`: list of the rates of the transition between the 'promoter' states
-- `kini::Vector{Float64}`: list of the initiation rates 
-- `delta::Float64`: degradation/release rate
+- `parameters::Vector{Float64}`: list of the all the rate parameters
 - `maxrna::Int`: maximum number of mRNA considered in the model
 """
-function StoModel!(P::Array{Float64,2}, model::StandardStoModel, parameters::Vector{Float64},kini::Float64,delta::Float64, maxrna::Int)
+function StoModel!(P::Array{Float64,2}, model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int)
     Qstate = zeros(model.nbstate,model.nbstate) 
     for i in eachindex(model.ParamToRate_val)
         Qstate[model.ParamToRate_idx[i]] = parameters[model.ParamToRate_val[i]]
@@ -82,10 +80,10 @@ function StoModel!(P::Array{Float64,2}, model::StandardStoModel, parameters::Vec
 
     for i=0:maxrna-1
         for j in eachindex(model.TrState)
-            P[i*model.nbstate+model.TrState[j],i*model.nbstate+model.TrState[j]+model.nbstate] = kini[model.KiniToRate_idx[j]]
+            P[i*model.nbstate+model.TrState[j],i*model.nbstate+model.TrState[j]+model.nbstate] = parameters[model.KiniToRate_idx[j]]
         end
         for j = 1:model.nbstate
-            P[(i+1)*model.nbstate+j,i*model.nbstate+j] = delta*(i+1)
+            P[(i+1)*model.nbstate+j,i*model.nbstate+j] = parameters[model.deltaToRate_idx]*(i+1)
         end
     end
     for i in axes(P,1)
@@ -97,17 +95,15 @@ end
 
 
 """
-    StoModel_RateMat(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int)
+    StoModel_RateMat(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int)
 
 Return the rate matrix of a model instance based on the topology of the model.
 
 #Arguments
-- `parameters::Vector{Float64}`: list of the rates of the transition between the 'promoter' states
-- `kini::Vector{Float64}`: list of the initiation rates
-- `delta::Float64`: degradation/release rate
+- `parameters::Vector{Float64}`: list of the all the rate parameters
 - `maxrna::Int`: maximum number of mRNA considered in the model
 """
-function StoModel_RateMat(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int)
+function StoModel_RateMat(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int)
     Qstate = zeros(model.nbstate,model.nbstate) 
     Q = zeros(model.nbstate*(maxrna+1),model.nbstate*(maxrna+1))
     for i in eachindex(model.ParamToRate_val)
@@ -119,10 +115,10 @@ function StoModel_RateMat(model::StandardStoModel, parameters::Vector{Float64},k
 
     for i=0:maxrna-1
         for j in eachindex(model.TrState)
-            Q[i*model.nbstate+model.TrState[j],i*model.nbstate+model.TrState[j]+model.nbstate] = kini[model.KiniToRate_idx[j]]
+            Q[i*model.nbstate+model.TrState[j],i*model.nbstate+model.TrState[j]+model.nbstate] = parameters[model.KiniToRate_idx[j]]
         end
         for j = 1:model.nbstate
-            Q[(i+1)*model.nbstate+j,i*model.nbstate+j] = delta*(i+1)
+            Q[(i+1)*model.nbstate+j,i*model.nbstate+j] = parameters[model.deltaToRate_idx]*(i+1)
         end
     end
     for i in axes(Q,1)

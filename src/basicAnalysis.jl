@@ -18,7 +18,7 @@ end
 
 
 """
-    ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
+    ModelOutput(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
 
 Return the main outputs of the model: mean nb of nascent mrna, probability to observe a burst, ON time survival,
 OFF time survival,next burst time survival, correlation of consecutive inter burst evts, average intensity track
@@ -33,13 +33,13 @@ OFF time survival,next burst time survival, correlation of consecutive inter bur
 - `tmaxnextburst::Int64`: maximum time for the Next burst time suvival probabilities 
 - `tmaxintensity::Int64`: maximum time for the averaged track intensity 
 """
-function ModelOutput(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64) 
+function ModelOutput(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64) 
     timevec_on = 1:1:tmaxon
     timevec_off = 1:1:tmaxoff
     timevec_nextburst = 1:1:tmaxnextburst
     timevec_intensity = 1:1:tmaxintensity
     #model instance
-    P = StoModel(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64)
+    P = StoModel(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64)
     
     #nascent mrna
     evs = eigvecs(P')
@@ -141,12 +141,12 @@ end
 
 
 """
-    mo_basics(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64)
+    mo_basics(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64)
 
 return important vectors and matrices used in the analysis of the model
 """
-function mo_basics(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64) 
-    P = StoModel(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64)
+function mo_basics(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64) 
+    P = StoModel(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64)
     evs = eigvecs(P')
     ssp = normalizemat!(real.(evs[:,end]))
     stateTr = [x for x in 2*model.nbstate+1 :(maxrna+1)*model.nbstate]
@@ -163,12 +163,12 @@ end
 
 
 """
-    mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2})
+    mo_basics!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2})
 
 change vector and matrices used in on and off time; mean nascent rna, p_on, correlation
 """
-function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}) 
-    P .= StoModel(model, parameters,kini,delta, maxrna)
+function mo_basics!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}) 
+    P .= StoModel(model, parameters, maxrna)
     evs = eigvecs(P')
     ssp .= normalizemat!(real.(evs[:,end]))
     weightsAbs_off = normalizemat!(ssp[stateTr_on])
@@ -177,12 +177,12 @@ function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::V
 end
 
 """
-    mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vecotr{Float64})
+    mo_basics!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vecotr{Float64})
 
 change vector and matrices used in on and off time; mean nascent rna, p_on, correlation, next burst survival
 """
-function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}) 
-    P .= StoModel(model, parameters,kini,delta, maxrna)
+function mo_basics!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}) 
+    P .= StoModel(model, parameters, maxrna)
     evs = eigvecs(P')
     ssp .= normalizemat!(real.(evs[:,end]))
     weightsAbs_off = normalizemat!(ssp[stateTr_on])
@@ -192,12 +192,12 @@ function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::V
 end
 
 """
-    mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vecotr{Float64}, Pabs::Array{Float64,2})
+    mo_basics!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64}, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vecotr{Float64}, Pabs::Array{Float64,2})
 
 change vector and matrices used in ALL the statistics
 """
-function mo_basics!(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64},  stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}, Pabs::Array{Float64,2}) 
-    P .= StoModel(model, parameters,kini,delta, maxrna)
+function mo_basics!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64},  stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}, Pabs::Array{Float64,2}) 
+    P .= StoModel(model, parameters, maxrna)
     evs = eigvecs(P')
     ssp .= normalizemat!(real.(evs[:,end]))
     weightsAbs_off = normalizemat!(ssp[stateTr_on])
@@ -346,12 +346,12 @@ end
 
 
 """
-    mo_rna(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64)
+    mo_rna(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64)
 
 return mRNA distribution for model with parameters
 """
-function mo_rna(model::StandardStoModel, parameters::Vector{Float64},kini::Vector{Float64},delta::Float64, maxrna::Int64) 
-    P = StoModel(model, parameters,kini,delta, maxrna)
+function mo_rna(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64) 
+    P = StoModel(model, parameters, maxrna)
     evs = eigvecs(P')
     ssp = normalizemat!(real.(evs[:,end]))
     
