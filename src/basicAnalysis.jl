@@ -45,11 +45,11 @@ function ModelOutput(model::StandardStoModel, parameters::Vector{Float64}, maxrn
     evs = eigvecs(P')
     ssp = real.(evs[:,end]./sum(evs[:,end]))
 
-    stateBns = [x for x in deterctionlimitNS*model.nbstate+1 :(maxrna+1)*model.nbstate]
+    stateBns = [x for x in detectionlimitNS*model.nbstate+1 :(maxrna+1)*model.nbstate]
 
     pB = sum(ssp[stateBns])
     prna = ssp'kron(diagm(ones(maxrna+1)), ones(model.nbstate))
-    mnascentmrna_model = [x for x in deterctionlimitNS : maxrna]'prna[deterctionlimitNS+1:end]./pB
+    mnascentmrna_model = [x for x in detectionlimitNS : maxrna]'prna[detectionlimitNS+1:end]./pB
     
     #on times
     stateTr_on = [x for x in detectionlimitLC*model.nbstate+1 :(maxrna+1)*model.nbstate]
@@ -149,7 +149,7 @@ function mo_basics(model::StandardStoModel, parameters::Vector{Float64}, maxrna:
     P = StoModel(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64)
     evs = eigvecs(P')
     ssp = normalizemat!(real.(evs[:,end]))
-    stateTr = [x for x in deterctionlimitNS*model.nbstate+1 :(maxrna+1)*model.nbstate]
+    stateTr = [x for x in detectionlimitNS*model.nbstate+1 :(maxrna+1)*model.nbstate]
     stateTr_on = [x for x in detectionlimitLC*model.nbstate+1 :(maxrna+1)*model.nbstate]
     stateAbs_on = [x for x in 1 : detectionlimitLC*model.nbstate]
     weightsAbs_off = normalizemat!(ssp[stateTr_on])
