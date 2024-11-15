@@ -17,6 +17,8 @@ using Test
     #creating an instance 
     parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387, 3.80846,1.]
     maxrna = 25
+    detectionlimitLC = 1
+    detectionlimitNS = 2
 
     P1 = StoModel(model1, parameters, maxrna)
 
@@ -24,7 +26,7 @@ using Test
     timevec_on = 1:1:10
     timevec_int = 1:1:20
 
-    (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst_model, intensity_model) =  ModelOutput(model1, parameters, maxrna,timevec_on[end],timevec[end],timevec[end],timevec_int[end])
+    (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst_model, intensity_model) =  ModelOutput(model1, parameters, maxrna,detectionlimitLC, detectionlimitNS, timevec_on[end],timevec[end],timevec[end],timevec_int[end])
 
 
     @test mnascentmrna_model ≈ 3.0337754651143656
@@ -55,14 +57,16 @@ end
     parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387, 3.80846,1.]
 
     maxrna = 25
+    detectionlimitLC = 1
+    detectionlimitNS = 2
 
     timevec = 1:1:200
     timevec_on = 1:1:10
     timevec_intensity = 1:1:20
     
-    (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst_model, intensity_model) =  ModelOutput(model1, parameters, maxrna,timevec_on[end],timevec[end],timevec[end],timevec_intensity[end])
+    (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst_model, intensity_model) =  ModelOutput(model1, parameters, maxrna,detectionlimitLC, detectionlimitNS, timevec_on[end],timevec[end],timevec[end],timevec_intensity[end])
 
-    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna) 
+    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna, detectionlimitLC, detectionlimitNS,) 
 
     mnascent_s = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate) 
     survivalon_s = StoThyLiveCell.mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
@@ -70,7 +74,7 @@ end
     survivalnb_s = StoThyLiveCell.mo_nextbursttime(sspTr_off,PabsOff,timevec)
     pburst_s = StoThyLiveCell.mo_pon(ssp,stateTr_on)
     corr_s = StoThyLiveCell.mo_interburstcorr(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
-    avgint_s =StoThyLiveCell.mo_avgintensity(P,Pabs, sspTr_off,stateAbs_on, stateTr_on,timevec_intensity, model1.nbstate, maxrna)
+    avgint_s =StoThyLiveCell.mo_avgintensity(detectionlimitLC, P,Pabs, sspTr_off,stateAbs_on, stateTr_on,timevec_intensity, model1.nbstate, maxrna)
     @test mnascentmrna_model ≈ mnascent_s
     @test pburst_model ≈ pburst_s
     @test corr_interburst_model ≈ corr_s
@@ -99,21 +103,22 @@ end
     parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387, 3.80846,1.]
 
     maxrna = 25
-
+    detectionlimitLC = 1
+    detectionlimitNS = 2
 
     timevec = 1:1:200
     timevec_on = 1:1:10
     timevec_intensity = 1:1:20
     
  
-    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna) 
+    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna, detectionlimitLC, detectionlimitNS) 
     mnascent_s = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate) 
     survivalon_s = StoThyLiveCell.mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
     survivaloff_s = StoThyLiveCell.mo_offtime(PabsOff, weightsTr_off,timevec)
     pburst_s = StoThyLiveCell.mo_pon(ssp,stateTr_on)
     corr_s = StoThyLiveCell.mo_interburstcorr(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
 
-   StoThyLiveCell.mo_basics!(model1, parameters, maxrna,P,ssp, stateTr_on, stateAbs_on, weightsTr_off,PabsOff) 
+   StoThyLiveCell.mo_basics!(model1, parameters, maxrna, detectionlimitLC, detectionlimitNS, P,ssp, stateTr_on, stateAbs_on, weightsTr_off,PabsOff) 
     mnascent_s2 = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate) 
     survivalon_s2 = StoThyLiveCell.mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
     survivaloff_s2 = StoThyLiveCell.mo_offtime(PabsOff, weightsTr_off,timevec)
@@ -145,17 +150,18 @@ end
     parameters = [0.0178504,  0.0436684,  0.0543096,  0.427785,  0.023986,  0.308174,  2.24418,  1.28387, 3.80846,1.]
 
     maxrna = 25
-
+    detectionlimitLC = 1
+    detectionlimitNS = 2
 
     timevec = 1:1:200
     timevec_on = 1:1:10
     timevec_intensity = 1:1:20
     
  
-    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna) 
+    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna, detectionlimitLC, detectionlimitNS) 
     survivalnb_s = StoThyLiveCell.mo_nextbursttime(sspTr_off,PabsOff,timevec)
 
-    StoThyLiveCell.mo_basics!(model1, parameters, maxrna,P,ssp, stateTr_on, stateAbs_on, weightsTr_off,PabsOff,sspTr_off) 
+    StoThyLiveCell.mo_basics!(model1, parameters, maxrna, detectionlimitLC, detectionlimitNS, P,ssp, stateTr_on, stateAbs_on, weightsTr_off,PabsOff,sspTr_off) 
     survivalnb_s2 = StoThyLiveCell.mo_nextbursttime(sspTr_off,PabsOff,timevec)
 
     @test survivalnb_s[1] ≈  survivalnb_s2[1]
