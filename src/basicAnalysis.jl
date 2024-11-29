@@ -351,7 +351,7 @@ end
 return mRNA distribution for model with parameters
 """
 function mo_rna(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64) 
-    P = StoModel(model, parameters, maxrna)
+    P = StoModel_RateMat(model, parameters, maxrna)
     evs = eigvecs(P')
     ssp = normalizemat!(real.(evs[:,end]))
     
