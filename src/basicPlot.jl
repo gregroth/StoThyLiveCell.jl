@@ -6,13 +6,13 @@ Export the plotly traces of all the model output
 function plotAll(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, detectionlimitLC::Int64, detectionlimitNS::Int64, tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
     (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst, intensity_model) = ModelOutput(model, parameters, maxrna,detectionlimitLC, detectionlimitNS,tmaxon,tmaxoff,tmaxnextburst,tmaxintensity)
     #traces
-    offtimesurvival = plot(1:tmaxoff, survivaldark_model, linetype=:steppre, mode="lines", lc="black", lw=3, xguide="time (min)", yguide="OFF time survival probability", yscale=:log10);
-    ontimesurvival = plot(1:tmaxon, survivalspot_model, linetype=:steppre, mode="lines", lc="black", lw=3, xguide="time (min)", yguide="ON time survival probability", yscale=:log10);
-    nextburstsurvival = plot(1:tmaxnextburst, survivalnextburst_model, linetype=:steppre, mode="lines", lc="black", lw=3, xguide="time (min)", yguide="Next burst time survival probability", yscale=:log10); 
+    offtimesurvival = plot(1:tmaxoff, survivaldark_model, linetype=:steppre, lc="black", lw=3, xguide="time (min)", yguide="OFF time survival probability", yscale=:log10);
+    ontimesurvival = plot(1:tmaxon, survivalspot_model, linetype=:steppre, lc="black", lw=3, xguide="time (min)", yguide="ON time survival probability", yscale=:log10);
+    nextburstsurvival = plot(1:tmaxnextburst, survivalnextburst_model, linetype=:steppre, lc="black", lw=3, xguide="time (min)", yguide="Next burst time survival probability", yscale=:log10); 
     pburst = plot(bar("model", pburst_model),title="Probability to detect a burst")
     mnasentrna = plot(bar("model", mnascentmrna_model),title="Mean number of nascent mRNA")
     interburstcorr = plot(bar("model", corr_interburst), title="Inter-burst correlation")
-    avgintensity =  plot(1:tmaxintensity, intensity_model, linetype=:steppre, mode="lines", lc="black", lw=3, xguide="time (min)", yguide="Normalized intensity");
+    avgintensity =  plot(1:tmaxintensity, intensity_model, linetype=:steppre, lc="black", lw=3, xguide="time (min)", yguide="Normalized intensity");
         
     return (offtimesurvival,ontimesurvival,nextburstsurvival,pburst,mnasentrna,interburstcorr,avgintensity)
 end
@@ -27,7 +27,7 @@ end
 
 Export the plotly traces of all the model output
 """
-#function plotAll(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
+#= function plotAll(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
     (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst, intensity_model) = ModelOutput(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
     #traces
     offtimesurvival = scatter(x=1:tmaxoff, y=survivaldark_model, mode="lines", line=attr(color="black", width=3),showlegend=false);
@@ -94,7 +94,7 @@ Export the plotly traces of all the model output
         gridcolor = graphgridcolor,
         linecolor= axislinecolor,
         tickfont=attr(family=fontfamily, color=axislinecolor, size=fontsizeticks)),
-        plot_bgcolor  = figurebgcolor, yaxis_type="log") #,xaxis_type="log") yaxis_type="log"=#
+        plot_bgcolor  = figurebgcolor, yaxis_type="log") #,xaxis_type="log") yaxis_type="log"
     
     layout_pburst = Layout(width=figurehdim, height=figurevdim, font_family=fontfamily, xaxis=attr(
         title_text = "",
@@ -110,7 +110,7 @@ Export the plotly traces of all the model output
         gridcolor = graphgridcolor,
         linecolor= axislinecolor,
         tickfont=attr(family=fontfamily, color=axislinecolor, size=fontsizeticks)),
-        plot_bgcolor  = figurebgcolor) #,xaxis_type="log") yaxis_type="log"=#
+        plot_bgcolor  = figurebgcolor) #,xaxis_type="log") yaxis_type="log"
     
     layout_interburstcorr = Layout(width=figurehdim, height=figurevdim, font_family=fontfamily, xaxis=attr(
         title_text = "",
@@ -126,7 +126,7 @@ Export the plotly traces of all the model output
         gridcolor = graphgridcolor,
         linecolor= axislinecolor,
         tickfont=attr(family=fontfamily, color=axislinecolor, size=fontsizeticks)),
-        plot_bgcolor  = figurebgcolor) #,xaxis_type="log") yaxis_type="log"=#
+        plot_bgcolor  = figurebgcolor) #,xaxis_type="log") yaxis_type="log"
     layout_mnascent = Layout(width=figurehdim, height=figurevdim, font_family=fontfamily, xaxis=attr(
         title_text = "",
         title_font_size=fontsizeaxis,
@@ -141,7 +141,7 @@ Export the plotly traces of all the model output
         gridcolor = graphgridcolor,
         linecolor= axislinecolor,
         tickfont=attr(family=fontfamily, color=axislinecolor, size=fontsizeticks)),
-        plot_bgcolor  = figurebgcolor) #,xaxis_type="log") yaxis_type="log"=#
+        plot_bgcolor  = figurebgcolor) #,xaxis_type="log") yaxis_type="log"
 
     layout_intensity = Layout(width=figurehdim, height=figurevdim, font_family=fontfamily, xaxis=attr(
         title_text = "Time (min)",
@@ -157,7 +157,7 @@ Export the plotly traces of all the model output
         gridcolor = graphgridcolor,
         linecolor= axislinecolor,
         tickfont=attr(family=fontfamily, color=axislinecolor, size=fontsizeticks)),
-        plot_bgcolor  = figurebgcolor) #,xaxis_type="log") yaxis_type="log"=#
+        plot_bgcolor  = figurebgcolor) #,xaxis_type="log") yaxis_type="log"
 
     #plot
 
@@ -176,10 +176,10 @@ Export the plotly traces of all the model output
     plt_avgintensity = plot(avgintensity, layout_intensity);
     #display(plt_avgintensity)
     return (offtimesurvival,ontimesurvival,nextburstsurvival,pburst,mnasentrna,interburstcorr,avgintensity)
-#end
+end
 
 
-
+ =#
 
 
 
