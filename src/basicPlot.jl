@@ -6,6 +6,31 @@ Export the plotly traces of all the model output
 function plotAll(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
     (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst, intensity_model) = ModelOutput(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
     #traces
+    offtimesurvival = plot(1:tmaxoff, survivaldark_model, linetype=:steppre, mode="lines", lc="black", lw=3, xguide="time (min)", yguide="OFF time survival probability", yscale=:log10);
+    ontimesurvival = plot(1:tmaxon, survivalspot_model, linetype=:steppre, mode="lines", lc="black", lw=3, xguide="time (min)", yguide="ON time survival probability", yscale=:log10);
+    nextburstsurvival = plot(1:tmaxnextburst, survivalnextburst_model, linetype=:steppre, mode="lines", lc="black", lw=3, xguide="time (min)", yguide="Next burst time survival probability", yscale=:log10); 
+    pburst = plot(bar("model", pburst_model),title="Probability to detect a burst")
+    mnasentrna = plot(bar("model", mnascentmrna_model),title="Mean number of nascent mRNA")
+    interburstcorr = plot(bar("model", corr_interburst), title="Inter-burst correlation")
+    avgintensity =  plot(1:tmaxintensity, intensity_model, linetype=:steppre, mode="lines", lc="black", lw=3, xguide="time (min)", yguide="Normalized intensity");
+        
+    return (offtimesurvival,ontimesurvival,nextburstsurvival,pburst,mnasentrna,interburstcorr,avgintensity)
+end
+
+
+
+
+
+
+
+"""
+    plotAll(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
+
+Export the plotly traces of all the model output
+"""
+#function plotAll(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
+    (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst, intensity_model) = ModelOutput(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
+    #traces
     offtimesurvival = scatter(x=1:tmaxoff, y=survivaldark_model, mode="lines", line=attr(color="black", width=3),showlegend=false);
     ontimesurvival = scatter(x=1:tmaxon, y=survivalspot_model, mode="lines", line=attr(color="black", width=3),showlegend=false);
     nextburstsurvival = scatter(x=1:tmaxnextburst, y=survivalnextburst_model, mode="lines",  line=attr(color="black", width=3),showlegend=false);
@@ -152,7 +177,9 @@ function plotAll(model::StandardStoModel, parameters::Vector{Float64}, maxrna::I
     plt_avgintensity = plot(avgintensity, layout_intensity);
     #display(plt_avgintensity)
     return (offtimesurvival,ontimesurvival,nextburstsurvival,pburst,mnasentrna,interburstcorr,avgintensity)
-end
+#end
+
+
 
 
 
