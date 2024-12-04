@@ -3,8 +3,8 @@
 
 Export the plotly traces of all the model output
 """
-function plotAll(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
-    (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst, intensity_model) = ModelOutput(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
+function plotAll(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, detectionlimitLC::Int64, detectionlimitNS::Int64, tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
+    (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst, intensity_model) = ModelOutput(model, parameters, maxrna,detectionlimitLC, detectionlimitNS,tmaxon,tmaxoff,tmaxnextburst,tmaxintensity)
     #traces
     offtimesurvival = plot(1:tmaxoff, survivaldark_model, linetype=:steppre, mode="lines", lc="black", lw=3, xguide="time (min)", yguide="OFF time survival probability", yscale=:log10);
     ontimesurvival = plot(1:tmaxon, survivalspot_model, linetype=:steppre, mode="lines", lc="black", lw=3, xguide="time (min)", yguide="ON time survival probability", yscale=:log10);
@@ -16,7 +16,6 @@ function plotAll(model::StandardStoModel, parameters::Vector{Float64}, maxrna::I
         
     return (offtimesurvival,ontimesurvival,nextburstsurvival,pburst,mnasentrna,interburstcorr,avgintensity)
 end
-
 
 
 
