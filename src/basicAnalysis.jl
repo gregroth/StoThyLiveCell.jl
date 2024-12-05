@@ -352,8 +352,8 @@ return mRNA distribution for model with parameters
 """
 function mo_rna(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64) 
     Q = StoModel_RateMat(model, parameters, maxrna)
-    Q[:,end] = ones(2* (maxmrna+1))
-    b = zeros(2* (maxmrna+1))
+    Q[:,end] = ones(model.nbstate* (maxrna+1))
+    b = zeros(model.nbstate* (maxrna+1))
     b[end] = 1
     ssp = Q' \ b
     return ssp'kron(diagm(ones(maxrna+1)), ones(model.nbstate))
