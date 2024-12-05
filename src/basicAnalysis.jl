@@ -356,7 +356,7 @@ function mo_rna(model::StandardStoModel, parameters::Vector{Float64}, maxrna::In
     b = zeros(model.nbstate* (maxrna+1))
     b[end] = 1
     ssp = Q' \ b
-    ssp'kron(diagm(ones(maxrna+1)), ones(model.nbstate))
+    ssd_rna= ssp'kron(diagm(ones(maxrna+1)), ones(model.nbstate))
     ssd_rna[ssd_rna .<=0] .= 1e-9 
     return ssd_rna
 #=     evs = eigvecs(P')
