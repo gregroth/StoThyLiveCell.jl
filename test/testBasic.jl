@@ -68,7 +68,7 @@ end
 
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna, detectionlimitLC, detectionlimitNS,) 
 
-    mnascent_s = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate) 
+    mnascent_s = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate, detectionlimitNS) 
     survivalon_s = StoThyLiveCell.mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
     survivaloff_s = StoThyLiveCell.mo_offtime(PabsOff, weightsTr_off,timevec)
     survivalnb_s = StoThyLiveCell.mo_nextbursttime(sspTr_off,PabsOff,timevec)
@@ -112,7 +112,7 @@ end
     
  
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna, detectionlimitLC, detectionlimitNS) 
-    mnascent_s = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate) 
+    mnascent_s = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate, detectionlimitNS) 
     survivalon_s = StoThyLiveCell.mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
     survivaloff_s = StoThyLiveCell.mo_offtime(PabsOff, weightsTr_off,timevec)
     pburst_s = StoThyLiveCell.mo_pon(ssp,stateTr_on)
@@ -172,7 +172,7 @@ end
 
 @testset "Test optim burst" begin
 
-    datafile= load("./test/data_test.jld2") ;
+    datafile= load("./data_test.jld2") ;
     data_test = datafile["data_test"];
 
     datatype = (Survival_InterBurst(),Survival_Burst(),Mean_Nascent(), Prob_Burst(), Correlation_InterBurst(),)
