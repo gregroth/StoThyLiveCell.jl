@@ -49,7 +49,7 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; maxtime:
     return thetax
 end
 
-function ini_optim(optim_struct::OptimStruct; maxrnaLC::Int, maxrnaFC::Int, kwargs...)
+function ini_optim(optim_struct::OptimStruct; SRange::Vector{Tuple{Float64, Float64}}, FRange::Vector{Tuple{Int, Int}},fixedparameters::Vector{Float64},  freeparametersidx::Vector{Int}, maxrnaLC::Int, maxrnaFC::Int, kwargs...)
     @unpack data, dist, model = optim_struct
 
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, zeros(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitFC) 

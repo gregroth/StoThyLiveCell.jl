@@ -207,7 +207,7 @@ end
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9]
 
-    err_func = StoThyLiveCell.ini_optim(optimtest; FRange=FRange,fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC)
+    err_func = StoThyLiveCell.ini_optim(optimtest; SRange=SRange, FRange=FRange,fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC)
 
     freeparameters = [.01,.01,.01,.01,.1,.1,.1,.1,10]
 
