@@ -220,10 +220,3 @@ end
     @test err_func(freeparameters,optim_struct_wrapper ) ≈ 79.08876463047513
 end
 
-
-
-function test(x::Int; kwargs...)
-    x + b
-end
-
-test(3; b=4)
