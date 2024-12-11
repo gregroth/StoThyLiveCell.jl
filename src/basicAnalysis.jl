@@ -215,7 +215,7 @@ return the mean number of nascent mrna
 function mo_mnascent(ssp::Vector{Float64}, maxrna::Int64, stateTr::Vector{Int64}, nbstate::Int64, detectionlimitNS::Int) 
     pB = sum(ssp[stateTr])
     prna = ssp'kron(diagm(ones(maxrna+1)),ones(nbstate))
-    return [x for x in detectionlimitNS : maxrna]'prna[detectionLimitNS+1:end]./pB
+    return [x for x in detectionlimitNS : maxrna]'prna[detectionlimitNS+1:end]./pB
 end
 
 
