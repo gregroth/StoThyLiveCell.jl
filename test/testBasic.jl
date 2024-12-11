@@ -1,6 +1,6 @@
 using StoThyLiveCell
 using Test
-
+using DataFrames, FileIO, JLD2
 @testset "Test 2s3r model" begin
     #define the 2s 3r model
     #(r12,r21,r23,r32,k1on,k2on,k3on,koff)
@@ -170,3 +170,52 @@ end
 
 
 
+@testset "Test optim burst" begin
+
+    datafile= load("./test/data_test.jld2") ;
+    data_test = datafile["data_test"];
+
+    datatype = (Survival_InterBurst(),Survival_Burst(),Mean_Nascent(), Prob_Burst(), Correlation_InterBurst(),)
+    datagroup = :burst
+    datalist = data_test[[1,2,5,6,7]]
+    dist = (LsqSurvival(), LsqSurvival(), LsqNumber(),LsqProb(), LsqNumber(),)
+    maxrnaLC = 10
+    maxrnaFC = 40
+    detectionLimitLC = 1
+    detectionLimitFC = 2
+
+    data = DataFit{typeof(datatype),typeof(datagroup),typeof(datalist)}(datatype,datagroup,datalist,detectionLimitLC, detectionLimitFC)
+
+    #model
+    Qstate = [0    8    4    0    0    0;
+    7    0    0    4    0    0;
+    3    0    0    8    2    0;
+    0    3    6    0    0    2;
+    0    0    1    0    0    8;
+    0    0    0    1    5    0]
+    paramToRate_idx = findall(Qstate .>0)
+    paramToRate_val = Qstate[findall(Qstate .>0)]
+    model = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5],[9,9,9],10)
+
+    #setting up the optimiziation
+    optimtest = OptimStruct{typeof(data), typeof(dist), typeof(model)}(data,dist,model)
+
+    SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
+
+    FRange = [(0,200),(0,7),(1,1),(1,1),(1,15000),]
+    fixedparameters = [1.]
+    #indices of the free parameters
+    freeparametersidx = [1,2,3,4,5,6,7,8,9]
+
+    err_func = ini_optim(optimtest; FRange=FRange,fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC)
+
+    freeparameters = [.01,.01,.01,.01,.1,.1,.1,.1,10]
+
+    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, zeros(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitFC) 
+    utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs)
+
+    optim_struct_wrapper = OptimStructWrapper{typeof(optimtest.data),typeof(optimtest.dist), typeof(optimtest.model),typeof(err_func)}(optimtest.data,FRange, optimtest.dist, optimtest.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
+
+
+    @test err_func(freeparameters,optim_struct_wrapper ) ≈ 79.08876463047513
+end

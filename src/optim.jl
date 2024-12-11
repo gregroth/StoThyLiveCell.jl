@@ -1,8 +1,8 @@
 #functions used in the optimization procedure
 
-struct OptimStruct{DT,D,DI,M}
-    data::DataFit{DT,D}
-    dist::Vector{DI}
+struct OptimStruct{DF,DI,M}
+    data::DF
+    dist::DI
     model::M
 end
 
@@ -10,15 +10,17 @@ function OptimStruct(data::Vector, dist::D, model::M) where {D,M}
     return OptimStruct{typeof(dist),typeof(model)}(data, dist, model)
 end
 
-struct OptimStructWrapper{DT,D,DI,M,SR,EF}
-    data::DataFit{DT,D}
-    FRange::Vector{Int}
-    dist::Vector{DI}
+struct OptimStructWrapper{DF,DI,M,EF}
+    data::DF
+    FRange::Vector{Tuple{Int64, Int64}}
+    dist::DI
     model::M
-    SRange::SR
+    SRange::Vector{Tuple{Int64, Int64}}
+    maxrnaLC::Int
+    maxrnaFC::Int
     freeparametersidx::Vector{Int}
     fixedparam::Vector{Float32}
-    utileMat::NamedTuple{(:stateTr, :stateTr_on, :stateAbs_on, :weightsTr_off, :P, :ssp, :PabsOff),Tuple{Vector{Int64}, Vector{Int64}, Vector{Int64}, Vector{Float64}, Array{Float64,2}, Vector{Float64}, Array{Float64,2}}}
+    utileMat::NamedTuple{(:stateTr, :stateTr_on, :stateAbs_on, :weightsTr_off, :P, :ssp, :PabsOff, :sspTr_Off, :Pabs),Tuple{Vector{Int64}, Vector{Int64}, Vector{Int64}, Vector{Float64}, Array{Float64,2}, Vector{Float64}, Array{Float64,2}, Vector{Float64}, Array{Float64,2}}}
     err_func::EF
 end
 
@@ -50,24 +52,169 @@ end
 function ini_optim(optim_struct::OptimStruct; kwargs...)
     @unpack data, dist, model = optim_struct
 
-    utileMat = StoThyLiveCell.mo_basics(model, zeros(model.nbparameters+model.nbkini+1), data.maxrnaLC, data.detectionlimitLC) 
+    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, zeros(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitFC) 
+     
+    utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs)
     
-    optim_struct_wrapper = OptimStructWrapper(optim_struct.data,FRange, optim_struct.dist, optim_struct.model, SRange, freeparameteridx,fixedparam, utileMat, [])
+    optim_struct_wrapper = OptimStructWrapper{typeof(optim_struct.data),typeof(optim_struct.dist), typeof(optim_struct.model),typeof(err_func_basic)}(optim_struct.data,FRange, optim_struct.dist, optim_struct.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func_basic)
 
     if :burst == data.datagroups 
         function err_func(params,optim_struct_wrapper::OptimStructWrapper)
-            parameters = usefullfunctions.mergeparameter_base(moptim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
-            @unpack utileMat = optim_struct_wrapper
+            parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
+            #@unpack utileMat = optim_struct_wrapper
             #model outputs
-            StoThyLiveCell.mo_basics!(model, parameters[1:end-1], optim_struct_wrapper.maxrna, utileMat.P, utileMat.ssp, utileMat.stateTr_on, utileMat.stateAbs_on, utileMat.weightsTr_off, utileMat.PabsOff) 
-            error = 0  
-            for i in eachindex(optim_struct_wrapper.data.datatype)
-                estimate_signal = optim_struct_wrapper.data.datatype[i](tmax,optim_struct_wrapper)
-                error = error + optim_struct_wrapper.data.dist[i](estimate_signal,optim_struct_wrapper.data.data[i])
+            StoThyLiveCell.mo_basics!(model, parameters, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.utileMat.P, optim_struct_wrapper.utileMat.ssp, optim_struct_wrapper.utileMat.stateTr_on, optim_struct_wrapper.utileMat.stateAbs_on, optim_struct_wrapper.utileMat.weightsTr_off, optim_struct_wrapper.utileMat.PabsOff) 
+            error = 0.  
+            for i in eachindex(optim_struct_wrapper.data.datatypes)
+                estimate_signal_tot = optim_struct_wrapper.data.datatypes[i](optim_struct_wrapper.FRange[i][2],optim_struct_wrapper)
+                error = error + optim_struct_wrapper.dist[i](estimate_signal_tot,optim_struct_wrapper.data.data[i], optim_struct_wrapper.FRange[i][2])
             end
+            return error
         end
     end
     return err_func
 end
 
+
+
+function err_func_basic(params,optim_struct_wrapper::OptimStructWrapper)
+    return 0
+end
+
+
+
+
+
+
+function (f::Survival_Burst)(tmax::Int, optimstruct::OptimStructWrapper)
+    @unpack utileMat = optimstruct
+    
+    @unpack stateTr_on, stateAbs_on, P, ssp = utileMat
+
+
+    weightsAbs_on = ssp[stateAbs_on]./sum(ssp[stateAbs_on])     
+    weightsTr_on = weightsAbs_on' * P[stateAbs_on,stateTr_on]./sum(weightsAbs_on' * P[stateAbs_on,stateTr_on])
+
+    PabsOn = P[stateTr_on,stateTr_on]
+    tempdist = weightsTr_on
+    survivalspot_model_full = Vector{Float64}(undef,tmax)
+    for i in 1:tmax
+        tempdist = tempdist* PabsOn
+        survivalspot_model_full[i] = sum(tempdist)
+    end 
+    return survivalspot_model_full
+end
+
+function (f::Survival_InterBurst)(tmax::Int, optimstruct::OptimStructWrapper)
+    @unpack utileMat = optimstruct
+    
+    @unpack weightsTr_off, PabsOff = utileMat
+
+    tempdist = weightsTr_off
+    survivaldark_model_full = Vector{Float64}(undef,tmax)
+    for i in 1:tmax
+        tempdist = PabsOff'*tempdist
+        survivaldark_model_full[i] = sum(tempdist)
+    end 
+    return survivaldark_model_full
+end
+
+
+function (f::Survival_NextBurst)(tmax::Int, optimstruct::OptimStructWrapper)
+    @unpack utileMat = optimstruct
+    
+    @unpack sspTr_off, PabsOff = utileMat
+
+    tempdist = sspTr_off'
+    survivalnextburst_model = Vector{Float64}(undef,tmax)
+    for i in 1:tmax
+        tempdist = tempdist* PabsOff
+        survivalnextburst_model[i] = sum(tempdist)
+    end 
+    return survivalnextburst_model
+end
+
+
+function (f::Mean_Nascent)(tmax::Int, optimstruct::OptimStructWrapper)
+    @unpack utileMat = optimstruct
+    
+    @unpack stateTr, ssp = utileMat
+
+    pB = sum(ssp[stateTr])
+    prna = ssp'kron(diagm(ones(optimstruct.maxrnaLC+1)),ones(optimstruct.model.nbstate))
+    return [x for x in optimstruct.data.detectionLimitFC : optimstruct.maxrnaLC]'prna[optimstruct.data.detectionLimitFC+1:end]./pB
+end
+
+
+
+function (f::Prob_Burst)(tmax::Int, optimstruct::OptimStructWrapper)
+    @unpack utileMat = optimstruct
+    
+    @unpack stateTr_on, ssp = utileMat
+
+    return sum(ssp[stateTr_on])
+
+end
+
+
+function (f::Intensity_Burst)(tmax::Int, optimstruct::OptimStructWrapper)
+    @unpack utileMat = optimstruct
+    
+    @unpack stateTr_on, stateAbs_on, Pabs, P, sspTr_off = utileMat
+
+    weightsON = normalizemat!(P[stateAbs_on,stateTr_on]'*sspTr_off)
+ 
+    rnanbvec_on = vcat(kron([x for x in detectionlimitLC : maxrna],ones(nbstate)))
+
+    intensitytemp = weightsON
+    intensity_model = Vector{Float64}(undef,tmax)
+    for i in 1:tmax
+        intensity_model[i] = (rnanbvec_on'*intensitytemp)[1]
+        intensitytemp =  Pabs'*intensitytemp
+    end 
+    return intensity_model./maximum(intensity_model)
+end
+
+
+function (f::Correlation_InterBurst)(tmax::Int, optimstruct::OptimStructWrapper)
+    @unpack utileMat = optimstruct
+    
+    @unpack stateTr_on, stateAbs_on, weightsTr_off, P = utileMat
+
+    #correlation of the interburst durations
+    Qn = P[stateAbs_on,stateAbs_on]
+    Rn = P[stateAbs_on,stateTr_on]
+
+    Qb = P[stateTr_on,stateTr_on]
+    Rb = P[stateTr_on,stateAbs_on]
+    c = ones(length(stateAbs_on))
+
+    Nn = (I - Qn)^(-1)
+    Nb = (I - Qb)^(-1)
+
+    NR = Nb*Rb
+    Nc = Nn*c
+
+    cortemp=0
+    wpre = weightsTr_off
+    wpre2 = Rn'*wpre./sum(wpre)
+    wpre3 = NR'*wpre2/sum(wpre2)
+    ET2t = Nc'*wpre3 
+
+    for t=1:tmax
+        cortemp = cortemp + t*ET2t[1]*sum(Rn'*wpre)
+        wpre = Qn'*wpre
+        wpre2 = Rn'*wpre./sum(wpre)
+        wpre3 = NR'*wpre2./sum(wpre2)
+        ET2t = Nc'*wpre3
+        if sum(wpre)<1e-6
+            break
+        end
+    end
+    Et1 = Nc'weightsTr_off 
+    M2T = Nc'*(2*Nn'-I)*weightsTr_off
+    VarT = M2T[1] - Et1[1]^2
+
+    return (cortemp-Et1[1]^2)/VarT
+end
 

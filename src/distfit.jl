@@ -7,7 +7,13 @@ abstract type AbstractDistanceFitRNAandBurst end
 
 struct LikelihoodRNA <: AbstractDistanceFitRNA end
 
-struct LsqBurst <: AbstractDistanceFitBurst end
+struct LsqSurvival <: AbstractDistanceFitBurst end
+
+struct LsqProb <: AbstractDistanceFitBurst end
+
+
+struct LsqNumber <: AbstractDistanceFitBurst end
+
 
 
 function opt_dist(estimate_signal::Vector, ref_signal::Vector, dist::AbstractDistanceFitRNA; kwargs...)
@@ -26,12 +32,19 @@ function (f::LikelihoodRNA)(estimate_signal::Vector, ref_signal::Vector; kwargs.
     -sum(log.(estimate_signal_[ind] .+ 1e-6)) # add a small quantity to avoid log(0)
 end
 
-function (f::AbstractDistanceFitBurst)(estimate_signal::Vector, ref_signal::Vector; nb_data=length(ref_signal), kwargs...)
-    sum((log.(estimate_signal) - log.(ref_signal)).^2)/nb_data
+function (f::AbstractDistanceFitBurst)(estimate_signal_tot::Vector, ref_signal::Array, upperbound::Int; kwargs...)
+    data_cutoff = findlast(ref_signal[:,1] .<=upperbound)
+    estimate_signal = estimate_signal_tot[Int.(ref_signal[1:data_cutoff,1])]
+    sum((log.(estimate_signal) - log.(ref_signal[1:data_cutoff,2])).^2)/length(estimate_signal)
 end
 
+function (f::LsqProb)(estimate_signal_tot::Float64, ref_signal::Float64, upperbound::Int; kwargs...)
+    (log.(estimate_signal_tot) - log.(ref_signal)).^2
+end
 
-
+function (f::LsqNumber)(estimate_signal_tot::Float64, ref_signal::Float64, upperbound::Int; kwargs...)
+    (estimate_signal_tot - ref_signal)^2
+end
 
 
 
