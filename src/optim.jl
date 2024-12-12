@@ -30,7 +30,7 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
 
     err_func = ini_optim(optim_struct)
 
-    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, zeros(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitFC) 
+    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, zeros(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
      
     utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs)
     
@@ -38,25 +38,32 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
 
     sol = start_optim(optim_struct_wrapper, args...; kwargs...)
 
-    #model, stage = optim_struct.model, optim_struct.stage
-    ##params = thetax[1:end-1]
-    #estimate_data = compute_distribution(params, NT, model, stage, infer_counts, filter=filter_uniform)
-    #return thetax, hcat(estimate_data, reference_data)
+    #bestfit parameters
+    fvals = [sol[i].objective for i in eachindex(sol)] #collect all the optimization objective fct values
+    minval, minidx = findmin(fvals)
+    bfparameters= utiles.mergeparameter_base(fixedparameters, sol[minidx].u, freeparametersidx)
+    #bestfit signal
+    (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst, intensity_model) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper.model, bfparameters, maxrnaLC, optim_struct_wrapper.data.detectionLimitLC, optim_struct_wrapper.data.detectionLimitNS, 10,200,200,10) 
+    estimate_signal = (survival_burst = survivalspot_model, survival_interburst = survivaldark_model, survival_nextburst = survivalnextburst_model, prop_burst = pburst_model, mean_nascentrna = mnascentmrna_model, correlation_interburst = corr_interburst, intensity_burst = intensity_model)
+    return sol, bfparameters, minval, estimate_signal
 end
 
 
-function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; maxtime::Int=1, maxiters::Int=1 , Method=BBO_adaptive_de_rand_1_bin_radiuslimited(), kwargs...)
+function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim::Int=1, maxtime::Int=1, maxiters::Int=1 , Method=BBO_adaptive_de_rand_1_bin_radiuslimited(), kwargs...)
     @unpack SRange, err_func = optim_struct_wrapper
     lbfull = [SRange[i][1] for i in eachindex(SRange)]
     ubfull = [SRange[i][2] for i in eachindex(SRange)]
     lb = lbfull[optim_struct_wrapper.freeparametersidx]
     ub = ubfull[optim_struct_wrapper.freeparametersidx]
     db = ub - lb
-    u0 = lb .+ rand(length(lb)).*db
-    optprob = OptimizationFunction(err_func);
-    prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
-    # Import a solver package and solve the optimization problem
-    sol = solve(prob, Method; maxtime = maxtime, maxiters = maxiters);
+    sol = []
+    for i = 1: NbOptim
+        u0 = lb .+ rand(length(lb)).*db
+        optprob = OptimizationFunction(err_func);
+        prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
+        # Import a solver package and solve the optimization problem
+        push!(sol, solve(prob, Method; maxtime = maxtime, maxiters = maxiters));
+    end
     return sol
 end
 
@@ -145,7 +152,7 @@ function (f::Mean_Nascent)(tmax::Int, optimstruct::OptimStructWrapper)
 
     pB = sum(ssp[stateTr])
     prna = ssp'kron(diagm(ones(optimstruct.maxrnaLC+1)),ones(optimstruct.model.nbstate))
-    return [x for x in optimstruct.data.detectionLimitFC : optimstruct.maxrnaLC]'prna[optimstruct.data.detectionLimitFC+1:end]./pB
+    return [x for x in optimstruct.data.detectionLimitNS : optimstruct.maxrnaLC]'prna[optimstruct.data.detectionLimitNS+1:end]./pB
 end
 
 

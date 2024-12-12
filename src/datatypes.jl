@@ -7,7 +7,7 @@ struct DataFit{DT, DG, D} <: AbstractDataOptim
     datagroups::DG
     data::D
     detectionLimitLC::Int
-    detectionLimitFC::Int
+    detectionLimitNS::Int
 end
 
 struct Survival_Burst <: AbstractData
