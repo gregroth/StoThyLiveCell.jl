@@ -176,7 +176,7 @@ end
     data_test = datafile["data_test"];
 
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
-    datagroup = :burst
+    datagroup = :LiveCell
     datalist = data_test[[1,2,5,6,7]]
     dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10
@@ -227,7 +227,7 @@ end
     data_test = datafile["data_test"];
 
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
-    datagroup = :burst
+    datagroup = :LiveCell
     datalist = data_test[[1,2,5,6,7]]
     dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10

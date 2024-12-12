@@ -45,7 +45,7 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
     #bestfit signal
     (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst, intensity_model) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper.model, bfparameters, maxrnaLC, optim_struct_wrapper.data.detectionLimitLC, optim_struct_wrapper.data.detectionLimitNS, 10,200,200,10) 
     estimate_signal = (survival_burst = survivalspot_model, survival_interburst = survivaldark_model, survival_nextburst = survivalnextburst_model, prop_burst = pburst_model, mean_nascentrna = mnascentmrna_model, correlation_interburst = corr_interburst, intensity_burst = intensity_model)
-    return sol, bfparameters, minval, estimate_signal
+    return sol, bfparameters, minval, minidx, estimate_signal
 end
 
 
