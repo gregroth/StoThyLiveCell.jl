@@ -25,45 +25,48 @@ struct OptimStructWrapper{DF,DI,M,EF}
 end
 
 
-function optim_function(SRange, optim_struct::OptimStruct, args...; kwargs...)
-
-    err_func = ini_optim(optim_struct; kwargs...)
-
-    optim_struct_wrapper = OptimStructWrapper(optim_struct.data,FRange, optim_struct.dist, optim_struct.model, SRange, freeparameteridx,fixedparam, utileMat, err_func)
-
-    thetax = start_optim(optim_struct_wrapper, args...; kwargs...)
-
-    model, stage = optim_struct.model, optim_struct.stage
-    params = thetax[1:end-1]
-    estimate_data = compute_distribution(params, NT, model, stage, infer_counts, filter=filter_uniform)
-    return thetax, hcat(estimate_data, reference_data)
-end
-
-
-function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; maxtime::Int=100, maxiters::Int=100 , Method=:adaptive_de_rand_1_bin_radiuslimited, kwargs...)
-    @unpack SRange, err_func = optim_struct_wrapper
-    optprob = OptimizationFunction(lsq);
-    prob = OptimizationProblem(optprob, u0, metaparam, lb = lbu, ub = ubu)
-    # Import a solver package and solve the optimization problem
-    sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(); maxtime = maxtime, maxiters = maxiters);
-    return thetax
-end
-
-function ini_optim(optim_struct::OptimStruct; SRange::Vector{Tuple{Float64, Float64}}, FRange::Vector{Tuple{Int, Int}},fixedparameters::Vector{Float64},  freeparametersidx::Vector{Int}, maxrnaLC::Int, maxrnaFC::Int, kwargs...)
+function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxrnaLC = 10, maxrnaFC = 60, freeparametersidx =[x for x in eachindex(SRange)], fixedparameters =[-1],  kwargs...)
     @unpack data, dist, model = optim_struct
+
+    err_func = ini_optim(optim_struct)
 
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, zeros(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitFC) 
      
     utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs)
     
-    optim_struct_wrapper = OptimStructWrapper{typeof(optim_struct.data),typeof(optim_struct.dist), typeof(optim_struct.model),typeof(err_func_basic)}(optim_struct.data,FRange, optim_struct.dist, optim_struct.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func_basic)
+    optim_struct_wrapper = OptimStructWrapper{typeof(optim_struct.data),typeof(optim_struct.dist), typeof(optim_struct.model),typeof(err_func)}(optim_struct.data, FRange, optim_struct.dist, optim_struct.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
 
-    if :burst == data.datagroups 
+    sol = start_optim(optim_struct_wrapper, args...; kwargs...)
+
+    #model, stage = optim_struct.model, optim_struct.stage
+    ##params = thetax[1:end-1]
+    #estimate_data = compute_distribution(params, NT, model, stage, infer_counts, filter=filter_uniform)
+    #return thetax, hcat(estimate_data, reference_data)
+end
+
+
+function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; maxtime::Int=1, maxiters::Int=1 , kwargs...)
+    @unpack SRange, err_func = optim_struct_wrapper
+    lbfull = [SRange[i][1] for i in eachindex(SRange)]
+    ubfull = [SRange[i][2] for i in eachindex(SRange)]
+    lb = lbfull[optim_struct_wrapper.freeparametersidx]
+    ub = ubfull[optim_struct_wrapper.freeparametersidx]
+    db = ub - lb
+    u0 = lb .+ rand(length(lb)).*db
+    optprob = OptimizationFunction(err_func);
+    prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
+    # Import a solver package and solve the optimization problem
+    sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(); maxtime = maxtime, maxiters = maxiters);
+    return sol
+end
+
+function ini_optim(optim_struct::OptimStruct; kwargs...)
+    if :burst == optim_struct.data.datagroups 
         function err_func(params,optim_struct_wrapper::OptimStructWrapper)
             parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
             #@unpack utileMat = optim_struct_wrapper
             #model outputs
-            StoThyLiveCell.mo_basics!(model, parameters, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.utileMat.P, optim_struct_wrapper.utileMat.ssp, optim_struct_wrapper.utileMat.stateTr_on, optim_struct_wrapper.utileMat.stateAbs_on, optim_struct_wrapper.utileMat.weightsTr_off, optim_struct_wrapper.utileMat.PabsOff) 
+            StoThyLiveCell.mo_basics!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.utileMat.P, optim_struct_wrapper.utileMat.ssp, optim_struct_wrapper.utileMat.stateTr_on, optim_struct_wrapper.utileMat.stateAbs_on, optim_struct_wrapper.utileMat.weightsTr_off, optim_struct_wrapper.utileMat.PabsOff) 
             error = 0.  
             for i in eachindex(optim_struct_wrapper.data.datatypes)
                 estimate_signal_tot = optim_struct_wrapper.data.datatypes[i](optim_struct_wrapper.FRange[i][2],optim_struct_wrapper)

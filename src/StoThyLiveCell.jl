@@ -4,6 +4,10 @@ using LinearAlgebra
 using ExponentialUtilities
 using DocStringExtensions
 using UnPack
+
+using Optimization
+using OptimizationOptimJL
+using OptimizationBBO
 #using Plots
 
 include("basicModel.jl")

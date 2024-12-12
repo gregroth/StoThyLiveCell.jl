@@ -170,7 +170,7 @@ end
 
 
 
-@testset "Test optim burst" begin
+@testset "Test optim error function" begin
 
     datafile= load("./data_test.jld2") ;
     data_test = datafile["data_test"];
@@ -207,8 +207,8 @@ end
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9]
 
-    err_func = StoThyLiveCell.ini_optim(optimtest; SRange=SRange, FRange=FRange,fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC)
-
+    err_func = StoThyLiveCell.ini_optim(optimtest)
+    
     freeparameters = [.01,.01,.01,.01,.1,.1,.1,.1,10]
 
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, zeros(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitFC) 
@@ -220,3 +220,44 @@ end
     @test err_func(freeparameters,optim_struct_wrapper ) ≈ 79.08876463047513
 end
 
+
+@testset "Test optim" begin
+
+    datafile= load("./data_test.jld2") ;
+    data_test = datafile["data_test"];
+
+    datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
+    datagroup = :burst
+    datalist = data_test[[1,2,5,6,7]]
+    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
+    maxrnaLC = 10
+    maxrnaFC = 40
+    detectionLimitLC = 1
+    detectionLimitFC = 2
+
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datagroup),typeof(datalist)}(datatype,datagroup,datalist,detectionLimitLC, detectionLimitFC)
+
+    #model
+    Qstate = [0    8    4    0    0    0;
+    7    0    0    4    0    0;
+    3    0    0    8    2    0;
+    0    3    6    0    0    2;
+    0    0    1    0    0    8;
+    0    0    0    1    5    0]
+    paramToRate_idx = findall(Qstate .>0)
+    paramToRate_val = Qstate[findall(Qstate .>0)]
+    model = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5],[9,9,9],10)
+
+    #setting up the optimiziation
+    optimtest = StoThyLiveCell.OptimStruct{typeof(data), typeof(dist), typeof(model)}(data,dist,model)
+
+    SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
+
+    FRange = [(0,200),(0,7),(1,1),(1,1),(1,15000),]
+    fixedparameters = [1.]
+    #indices of the free parameters
+    freeparametersidx = [1,2,3,4,5,6,7,8,9]
+
+    sol = StoThyLiveCell.optim_function(SRange, FRange, optimtest; fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC)
+
+end
