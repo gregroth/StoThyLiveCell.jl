@@ -45,7 +45,7 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
 end
 
 
-function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; maxtime::Int=1, maxiters::Int=1 , kwargs...)
+function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; maxtime::Int=1, maxiters::Int=1 , Method=BBO_adaptive_de_rand_1_bin_radiuslimited(), kwargs...)
     @unpack SRange, err_func = optim_struct_wrapper
     lbfull = [SRange[i][1] for i in eachindex(SRange)]
     ubfull = [SRange[i][2] for i in eachindex(SRange)]
@@ -56,7 +56,7 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; maxtime:
     optprob = OptimizationFunction(err_func);
     prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
     # Import a solver package and solve the optimization problem
-    sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(); maxtime = maxtime, maxiters = maxiters);
+    sol = solve(prob, Method; maxtime = maxtime, maxiters = maxiters);
     return sol
 end
 
