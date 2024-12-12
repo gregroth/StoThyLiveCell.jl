@@ -68,7 +68,7 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
 end
 
 function ini_optim(optim_struct::OptimStruct; kwargs...)
-    if :burst == optim_struct.data.datagroups 
+    if :LiveCell == optim_struct.data.datagroups 
         function err_func(params,optim_struct_wrapper::OptimStructWrapper)
             parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
             #@unpack utileMat = optim_struct_wrapper
