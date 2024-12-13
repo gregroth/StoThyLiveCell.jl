@@ -69,7 +69,7 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
 end
 
 function ini_optim(optim_struct::OptimStruct; kwargs...)
-    if optim_struct.dist <: Vector{AbstractDataLiveCell}
+    if optim_struct.data.datagroup == :LiveCell
         function err_func(params,optim_struct_wrapper::OptimStructWrapper)
             parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
             #@unpack utileMat = optim_struct_wrapper
@@ -82,7 +82,7 @@ function ini_optim(optim_struct::OptimStruct; kwargs...)
             end
             return error
         end
-    elseif optim_struct.dist <: Vector{AbstractDataFixedCell}
+    elseif optim_struct.data.datagroup == :FixedCell
         function err_func(params,optim_struct_wrapper::OptimStructWrapper)
             parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
             #@unpack utileMat = optim_struct_wrapper

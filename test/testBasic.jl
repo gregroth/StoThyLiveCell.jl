@@ -177,13 +177,14 @@ end
 
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
     datalist = data_test[[1,2,5,6,7]]
+    datagroup = :LiveCell
     dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10
     maxrnaFC = 40
     detectionLimitLC = 1
     detectionLimitNS = 2
 
-    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype,datalist,detectionLimitLC, detectionLimitNS)
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datagroup),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
 
     #model
     Qstate = [0    8    4    0    0    0;
@@ -227,13 +228,14 @@ end
 
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
     datalist = data_test[[1,2,5,6,7]]
+    datagroup = :LiveCell
     dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10
     maxrnaFC = 40
     detectionLimitLC = 1
     detectionLimitNS = 2
 
-    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype,datalist,detectionLimitLC, detectionLimitNS)
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datagroup),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
 
     #model
     Qstate = [0    8    4    0    0    0;
@@ -269,13 +271,14 @@ end
 
     datatype = (StoThyLiveCell.Distributino_RNA(),)
     datalist = data_test[[8]]
+    datagroup = :FixedCell
     dist = (StoThyLiveCell.LikelihoodRNA(),)
     maxrnaLC = 10
     maxrnaFC = maximum(datalist[1])
     detectionLimitLC = 1
     detectionLimitNS = 2
 
-    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype,datalist,detectionLimitLC, detectionLimitNS)
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datagroup),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
 
     #model
     Qstate = [0    8    4    0    0    0;
