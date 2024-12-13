@@ -177,14 +177,14 @@ end
 
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
     datalist = data_test[[1,2,5,6,7]]
-    datagroup = :LiveCell
+    datagroup = StoThyLiveCell.LiveCellData()
     dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10
     maxrnaFC = 40
     detectionLimitLC = 1
     detectionLimitNS = 2
 
-    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datagroup),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
 
     #model
     Qstate = [0    8    4    0    0    0;
@@ -212,7 +212,9 @@ end
     freeparameters = [.01,.01,.01,.01,.1,.1,.1,.1,10]
 
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, zeros(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
-    utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs)
+    Qrna = zeros(model.nbstate*(maxrnaFC+1),model.nbstate*(maxrnaFC+1))
+    utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs, Qrna=Qrna)
+    
 
     optim_struct_wrapper = StoThyLiveCell.OptimStructWrapper{typeof(optimtest.data),typeof(optimtest.dist), typeof(optimtest.model),typeof(err_func)}(optimtest.data,FRange, optimtest.dist, optimtest.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
 
@@ -228,14 +230,14 @@ end
 
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
     datalist = data_test[[1,2,5,6,7]]
-    datagroup = :LiveCell
+    datagroup = StoThyLiveCell.LiveCellData()
     dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10
     maxrnaFC = 40
     detectionLimitLC = 1
     detectionLimitNS = 2
 
-    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datagroup),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
 
     #model
     Qstate = [0    8    4    0    0    0;
@@ -271,14 +273,14 @@ end
 
     datatype = (StoThyLiveCell.Distributino_RNA(),)
     datalist = data_test[[8]]
-    datagroup = :FixedCell
+    datagroup = StoThyLiveCell.FixedCellData()
     dist = (StoThyLiveCell.LikelihoodRNA(),)
     maxrnaLC = 10
     maxrnaFC = maximum(datalist[1])
     detectionLimitLC = 1
     detectionLimitNS = 2
 
-    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datagroup),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
 
     #model
     Qstate = [0    8    4    0    0    0;

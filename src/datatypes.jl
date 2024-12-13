@@ -1,14 +1,22 @@
 #list of the distance functions used in the fit of the multi-state model
 abstract type AbstractData end
+abstract type AbstractDataGroup end
+
 abstract type AbstractDataOptim end
 
-struct DataFit{DT, DG, D} <: AbstractDataOptim
+struct DataFit{DT, D} <: AbstractDataOptim
     datatypes::DT
-    datagroup::DG
+    datagroup::AbstractDataGroup
     data::D
     detectionLimitLC::Int
     detectionLimitNS::Int
 end
+
+struct LiveCellData <: AstractDataGroup end
+
+struct FixedCellData <: AstractDataGroup end
+
+struct FixedAndLiveCellData <: AstractDataGroup end
 
 struct Survival_Burst <: AbstractData
 end

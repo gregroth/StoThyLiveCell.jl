@@ -28,7 +28,7 @@ end
 function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxrnaLC = 10, maxrnaFC = 60, freeparametersidx =[x for x in eachindex(SRange)], fixedparameters =[-1],  kwargs...)
     @unpack data, dist, model = optim_struct
 
-    err_func = ini_optim(optim_struct)
+    err_func = ini_optim(optim_struct, optim_struct.datagroup)
 
     #allocate memory for the utiles matrices
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, zeros(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
@@ -68,48 +68,52 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
     return sol
 end
 
-function ini_optim(optim_struct::OptimStruct; kwargs...)
-    if optim_struct.data.datagroup == :LiveCell
-        function err_func(params,optim_struct_wrapper::OptimStructWrapper)
-            parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
-            #@unpack utileMat = optim_struct_wrapper
-            #model outputs
-            StoThyLiveCell.mo_basics!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.utileMat.P, optim_struct_wrapper.utileMat.ssp, optim_struct_wrapper.utileMat.stateTr_on, optim_struct_wrapper.utileMat.stateAbs_on, optim_struct_wrapper.utileMat.weightsTr_off, optim_struct_wrapper.utileMat.PabsOff) 
-            error = 0.  
-            for i in eachindex(optim_struct_wrapper.data.datatypes)
-                estimate_signal_tot = optim_struct_wrapper.data.datatypes[i](optim_struct_wrapper.FRange[i][2],optim_struct_wrapper)
-                error = error + optim_struct_wrapper.dist[i](estimate_signal_tot,optim_struct_wrapper.data.data[i], optim_struct_wrapper.FRange[i][2])
-            end
-            return error
+function ini_optim(optim_struct::OptimStruct, datagroup::LiveCellData; kwargs...)
+    function err_func(params,optim_struct_wrapper::OptimStructWrapper)
+        parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
+        #@unpack utileMat = optim_struct_wrapper
+        #model outputs
+        StoThyLiveCell.mo_basics!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.utileMat.P, optim_struct_wrapper.utileMat.ssp, optim_struct_wrapper.utileMat.stateTr_on, optim_struct_wrapper.utileMat.stateAbs_on, optim_struct_wrapper.utileMat.weightsTr_off, optim_struct_wrapper.utileMat.PabsOff) 
+        error = 0.  
+        for i in eachindex(optim_struct_wrapper.data.datatypes)
+            estimate_signal_tot = optim_struct_wrapper.data.datatypes[i](optim_struct_wrapper.FRange[i][2],optim_struct_wrapper)
+            error = error + optim_struct_wrapper.dist[i](estimate_signal_tot,optim_struct_wrapper.data.data[i], optim_struct_wrapper.FRange[i][2])
         end
-    elseif optim_struct.data.datagroup == :FixedCell
-        function err_func(params,optim_struct_wrapper::OptimStructWrapper)
-            parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
-            #@unpack utileMat = optim_struct_wrapper
-            #model outputs
-            StoThyLiveCell.distrna_basic!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaFC, optim_struct_wrapper.utileMat.Qrna) 
-            estimate_signal_tot = optim_struct_wrapper.data.datatypes[1](optim_struct_wrapper.FRange[1][2],optim_struct_wrapper)
-            error = optim_struct_wrapper.dist[1](estimate_signal_tot,optim_struct_wrapper.data.data[1], optim_struct_wrapper.FRange[1][2])
-            return error
-        end
-    else
-        function err_func(params,optim_struct_wrapper::OptimStructWrapper)
-            parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
-            #@unpack utileMat = optim_struct_wrapper
-            #model outputs
-            StoThyLiveCell.mo_basics!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.utileMat.P, optim_struct_wrapper.utileMat.ssp, optim_struct_wrapper.utileMat.stateTr_on, optim_struct_wrapper.utileMat.stateAbs_on, optim_struct_wrapper.utileMat.weightsTr_off, optim_struct_wrapper.utileMat.PabsOff) 
-            StoThyLiveCell.distrna_basic!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaFC, optim_struct_wrapper.utileMat.Qrna) 
-            error = 0.  
-            for i in eachindex(optim_struct_wrapper.data.datatypes)
-                estimate_signal_tot = optim_struct_wrapper.data.datatypes[i](optim_struct_wrapper.FRange[i][2],optim_struct_wrapper)
-                error = error + optim_struct_wrapper.dist[i](estimate_signal_tot,optim_struct_wrapper.data.data[i], optim_struct_wrapper.FRange[i][2])
-            end
-            return error
-        end
+        return error
     end
     return err_func
 end
 
+function ini_optim(optim_struct::OptimStruct, datagroup::FixedCellData; kwargs...)
+    function err_func(params,optim_struct_wrapper::OptimStructWrapper)
+        parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
+        #@unpack utileMat = optim_struct_wrapper
+        #model outputs
+        StoThyLiveCell.distrna_basic!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaFC, optim_struct_wrapper.utileMat.Qrna) 
+        estimate_signal_tot = optim_struct_wrapper.data.datatypes[1](optim_struct_wrapper.FRange[1][2],optim_struct_wrapper)
+        error = optim_struct_wrapper.dist[1](estimate_signal_tot,optim_struct_wrapper.data.data[1], optim_struct_wrapper.FRange[1][2])
+        return error
+    end
+    return err_func
+end
+
+function ini_optim(optim_struct::OptimStruct, datagroup::FixedAndLiveCellData; kwargs...)
+    function err_func(params,optim_struct_wrapper::OptimStructWrapper)
+        parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
+        #@unpack utileMat = optim_struct_wrapper
+        #model outputs
+        StoThyLiveCell.mo_basics!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.utileMat.P, optim_struct_wrapper.utileMat.ssp, optim_struct_wrapper.utileMat.stateTr_on, optim_struct_wrapper.utileMat.stateAbs_on, optim_struct_wrapper.utileMat.weightsTr_off, optim_struct_wrapper.utileMat.PabsOff) 
+        StoThyLiveCell.distrna_basic!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaFC, optim_struct_wrapper.utileMat.Qrna) 
+        error = 0.  
+        for i in eachindex(optim_struct_wrapper.data.datatypes)
+            estimate_signal_tot = optim_struct_wrapper.data.datatypes[i](optim_struct_wrapper.FRange[i][2],optim_struct_wrapper)
+            error = error + optim_struct_wrapper.dist[i](estimate_signal_tot,optim_struct_wrapper.data.data[i], optim_struct_wrapper.FRange[i][2])
+        end
+        return error
+    end 
+    return err_func
+end
+  
 
 
 function err_func_basic(params,optim_struct_wrapper::OptimStructWrapper)
