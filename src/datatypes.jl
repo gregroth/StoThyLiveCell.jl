@@ -12,11 +12,11 @@ struct DataFit{DT, D} <: AbstractDataOptim
     detectionLimitNS::Int
 end
 
-struct LiveCellData <: AstractDataGroup end
+struct LiveCellData <: AbstractDataGroup end
 
-struct FixedCellData <: AstractDataGroup end
+struct FixedCellData <: AbstractDataGroup end
 
-struct FixedAndLiveCellData <: AstractDataGroup end
+struct FixedAndLiveCellData <: AbstractDataGroup end
 
 struct Survival_Burst <: AbstractData
 end

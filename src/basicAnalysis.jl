@@ -369,5 +369,5 @@ end
 
 
 function distrna_basic!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, Q::Array{Float64,2}) 
-    Q = StoModel_RateMat(model, parameters, maxrna)
+    Q .= StoModel_RateMat(model, parameters, maxrna)
 end

@@ -202,13 +202,17 @@ end
 
     SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
 
-    FRange = [(0,200),(0,7),(1,1),(1,1),(1,15000),]
+    FRange = [(0,200),(0,7),(0,0),(0,0),(0,0),]
     fixedparameters = [1.]
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9]
 
-    err_func = StoThyLiveCell.ini_optim(optimtest)
+
+    err_func = StoThyLiveCell.ini_optim(optimtest, optimtest.data.datagroup)
     
+    data_fit = StoThyLiveCell.ini_data(optimtest, FRange)
+
+
     freeparameters = [.01,.01,.01,.01,.1,.1,.1,.1,10]
 
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, zeros(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
@@ -216,7 +220,7 @@ end
     utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs, Qrna=Qrna)
     
 
-    optim_struct_wrapper = StoThyLiveCell.OptimStructWrapper{typeof(optimtest.data),typeof(optimtest.dist), typeof(optimtest.model),typeof(err_func)}(optimtest.data,FRange, optimtest.dist, optimtest.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
+    optim_struct_wrapper = StoThyLiveCell.OptimStructWrapper{typeof(optimtest.data),typeof(optimtest.dist), typeof(optimtest.model),typeof(err_func)}(optimtest.data, data_fit, optimtest.dist, optimtest.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
 
 
     @test err_func(freeparameters,optim_struct_wrapper ) ≈ 79.08876463047513
@@ -255,7 +259,7 @@ end
 
     SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
 
-    FRange = [(0,200),(0,7),(1,1),(1,1),(1,15000),]
+    FRange = [(0,200),(0,7),(0,0),(0,0),(0,0),]
     fixedparameters = [1.]
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9]
@@ -271,7 +275,7 @@ end
     datafile= load("./data_test.jld2") ;
     data_test = datafile["data_test"];
 
-    datatype = (StoThyLiveCell.Distributino_RNA(),)
+    datatype = (StoThyLiveCell.Distribution_RNA(),)
     datalist = data_test[[8]]
     datagroup = StoThyLiveCell.FixedCellData()
     dist = (StoThyLiveCell.LikelihoodRNA(),)
@@ -298,7 +302,7 @@ end
 
     SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
 
-    FRange = [(0,1),]
+    FRange = [(0,55),]
     fixedparameters = [1.]
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9]
@@ -307,3 +311,5 @@ end
 
     @test typeof(sol[2].u) <: Vector
 end
+
+
