@@ -258,7 +258,7 @@ end
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9]
 
-    sol, bfparameters, minval, estimate_signal = StoThyLiveCell.optim_function(SRange, FRange, optimtest; NbOptim=2, fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC)
+    sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function(SRange, FRange, optimtest; NbOptim=2, fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC)
 
     @test typeof(sol[2].u) <: Vector
 end
