@@ -176,7 +176,6 @@ end
     data_test = datafile["data_test"];
 
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
-    datagroup = :LiveCell
     datalist = data_test[[1,2,5,6,7]]
     dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10
@@ -184,7 +183,7 @@ end
     detectionLimitLC = 1
     detectionLimitNS = 2
 
-    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datagroup),typeof(datalist)}(datatype,datagroup,datalist,detectionLimitLC, detectionLimitNS)
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype,datalist,detectionLimitLC, detectionLimitNS)
 
     #model
     Qstate = [0    8    4    0    0    0;
@@ -227,7 +226,6 @@ end
     data_test = datafile["data_test"];
 
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
-    datagroup = :LiveCell
     datalist = data_test[[1,2,5,6,7]]
     dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10
@@ -235,7 +233,7 @@ end
     detectionLimitLC = 1
     detectionLimitNS = 2
 
-    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datagroup),typeof(datalist)}(datatype,datagroup,datalist,detectionLimitLC, detectionLimitNS)
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype,datalist,detectionLimitLC, detectionLimitNS)
 
     #model
     Qstate = [0    8    4    0    0    0;
