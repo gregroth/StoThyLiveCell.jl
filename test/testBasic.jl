@@ -1,6 +1,7 @@
 using StoThyLiveCell
 using Test
 using DataFrames, FileIO, JLD2
+using BenchmarkTools
 @testset "Test 2s3r model" begin
     #define the 2s 3r model
     #(r12,r21,r23,r32,k1on,k2on,k3on,koff)
@@ -222,6 +223,7 @@ end
 
     optim_struct_wrapper = StoThyLiveCell.OptimStructWrapper{typeof(optimtest.data),typeof(optimtest.dist), typeof(optimtest.model),typeof(err_func)}(optimtest.data, data_fit, optimtest.dist, optimtest.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
 
+   @btime $err_func($freeparameters,$optim_struct_wrapper )
 
     @test err_func(freeparameters,optim_struct_wrapper ) ≈ 79.08876463047513
 end
