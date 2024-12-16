@@ -51,17 +51,17 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
         (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst, intensity_model) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper.model, bfparameters, maxrnaLC, optim_struct_wrapper.data_fit.detectionLimitLC, optim_struct_wrapper.data_fit.detectionLimitNS, 10,200,200,10) 
         bfparameters_mrna = vcat(bfparameters[1:end-1],.01)
         mrna_distribution_model = StoThyLiveCell.mo_rna(optim_struct_wrapper.model, bfparameters_mrna, optim_struct_wrapper.maxrnaFC) 
-        estimate_signal = (survival_burst = survivalspot_model, survival_interburst = survivaldark_model, survival_nextburst = survivalnextburst_model, prop_burst = pburst_model, mean_nascentrna = mnascentmrna_model, correlation_interburst = corr_interburst, intensity_burst = intensity_model, mrna_distribution = mrna_distribution_model)    
+        estimate_signal = (survival_burst = survivalspot_model, survival_interburst = survivaldark_model, survival_nextburst = survivalnextburst_model, prob_burst = pburst_model, mean_nascentrna = mnascentmrna_model, correlation_interburst = corr_interburst, intensity_burst = intensity_model, mrna_distribution = mrna_distribution_model)    
     elseif data.datagroup == FixedCellData()
         bfparameters_lc = vcat(bfparameters[1:end-1],1.)
         (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst, intensity_model) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper.model,bfparameters_lc, maxrnaLC, optim_struct_wrapper.data_fit.detectionLimitLC, optim_struct_wrapper.data_fit.detectionLimitNS, 10,200,200,10) 
         mrna_distribution_model = StoThyLiveCell.mo_rna(optim_struct_wrapper.model, bfparameters, optim_struct_wrapper.maxrnaFC) 
-        estimate_signal = (survival_burst = survivalspot_model, survival_interburst = survivaldark_model, survival_nextburst = survivalnextburst_model, prop_burst = pburst_model, mean_nascentrna = mnascentmrna_model, correlation_interburst = corr_interburst, intensity_burst = intensity_model, mrna_distribution = mrna_distribution_model)    
+        estimate_signal = (survival_burst = survivalspot_model, survival_interburst = survivaldark_model, survival_nextburst = survivalnextburst_model, prob_burst = pburst_model, mean_nascentrna = mnascentmrna_model, correlation_interburst = corr_interburst, intensity_burst = intensity_model, mrna_distribution = mrna_distribution_model)    
     elseif data.datagroup == FixedAndLiveCellData()
         (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst, intensity_model) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper.model, bfparameters[1:end-1], maxrnaLC, optim_struct_wrapper.data_fit.detectionLimitLC, optim_struct_wrapper.data_fit.detectionLimitNS, 10,200,200,10) 
         bfparameters_mrna = vcat(bfparameters[1:end-1],bfparameters[end])
         mrna_distribution_model = StoThyLiveCell.mo_rna(optim_struct_wrapper.model, bfparameters_mrna, optim_struct_wrapper.maxrnaFC) 
-        estimate_signal = (survival_burst = survivalspot_model, survival_interburst = survivaldark_model, survival_nextburst = survivalnextburst_model, prop_burst = pburst_model, mean_nascentrna = mnascentmrna_model, correlation_interburst = corr_interburst, intensity_burst = intensity_model, mrna_distribution = mrna_distribution_model)    
+        estimate_signal = (survival_burst = survivalspot_model, survival_interburst = survivaldark_model, survival_nextburst = survivalnextburst_model, prob_burst = pburst_model, mean_nascentrna = mnascentmrna_model, correlation_interburst = corr_interburst, intensity_burst = intensity_model, mrna_distribution = mrna_distribution_model)    
     end
     return sol, bfparameters, minval, minidx, estimate_signal
 end
