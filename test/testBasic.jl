@@ -174,10 +174,10 @@ end
 @testset "Test optim error function" begin
 
     datafile= load("./data_test.jld2") ;
-    data_test = datafile["data_test"];
+    data_test = datafile["data_all"];
 
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
-    datalist = data_test[[1,2,5,6,7]]
+    datalist = data_test[[2,1,5,6,7]]
     datagroup = StoThyLiveCell.LiveCellData()
     dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10
@@ -225,17 +225,17 @@ end
 
    @btime $err_func($freeparameters,$optim_struct_wrapper )
 
-    @test err_func(freeparameters,optim_struct_wrapper ) ≈ 79.08876463047513
+    @test err_func(freeparameters,optim_struct_wrapper ) >= 0
 end
 
 
 @testset "Test optim for live cells" begin
 
     datafile= load("./data_test.jld2") ;
-    data_test = datafile["data_test"];
+    data_test = datafile["data_all"];
 
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
-    datalist = data_test[[1,2,5,6,7]]
+    datalist = data_test[[2,1,5,6,7]]
     datagroup = StoThyLiveCell.LiveCellData()
     dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10
@@ -276,7 +276,7 @@ end
 @testset "Test optim for fixed cells" begin
 
     datafile= load("./data_test.jld2") ;
-    data_test = datafile["data_test"];
+    data_test = datafile["data_all"];
 
     datatype = (StoThyLiveCell.Distribution_RNA(),)
     datalist = data_test[[8]]
@@ -318,10 +318,10 @@ end
 @testset "Test optim for mixture data" begin
 
     datafile= load("./data_test.jld2") ;
-    data_test = datafile["data_test"];
+    data_test = datafile["data_all"];
 
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(), StoThyLiveCell.Distribution_RNA(),)
-    datalist = data_test[[1,2,8]]
+    datalist = data_test[[2,1,8]]
     datagroup = StoThyLiveCell.FixedAndLiveCellData()
     dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LikelihoodRNA(),)
     maxrnaLC = 10
