@@ -268,6 +268,7 @@ end
 
     sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function(SRange, FRange, optimtest; NbOptim=2, fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC)
 
+    println(sol[1].objective)
     @test typeof(sol[2].u) <: Vector
 end
 

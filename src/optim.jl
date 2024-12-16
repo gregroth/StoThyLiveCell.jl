@@ -120,12 +120,14 @@ function ini_optim(optim_struct::OptimStruct, datagroup::FixedCellData; kwargs..
 end
 
 function ini_optim(optim_struct::OptimStruct, datagroup::FixedAndLiveCellData; kwargs...)
+    @warn "A mixture of live cell and fixed cell data is used in the error function"
+    @warn " The  last parameter is interpreted as the degradation rate in the calculations of the mRNA number distribution"
     function err_func(params,optim_struct_wrapper::OptimStructWrapper)
         parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
         #@unpack utileMat = optim_struct_wrapper
-        #model outputs
-        StoThyLiveCell.mo_basics!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.utileMat.P, optim_struct_wrapper.utileMat.ssp, optim_struct_wrapper.utileMat.stateTr_on, optim_struct_wrapper.utileMat.stateAbs_on, optim_struct_wrapper.utileMat.weightsTr_off, optim_struct_wrapper.utileMat.PabsOff) 
-        StoThyLiveCell.distrna_basic!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaFC, optim_struct_wrapper.utileMat.Qrna) 
+        #model outputs 
+        StoThyLiveCell.mo_basics!(optim_struct_wrapper.model, parameters[1:end-1], optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.utileMat.P, optim_struct_wrapper.utileMat.ssp, optim_struct_wrapper.utileMat.stateTr_on, optim_struct_wrapper.utileMat.stateAbs_on, optim_struct_wrapper.utileMat.weightsTr_off, optim_struct_wrapper.utileMat.PabsOff) 
+        StoThyLiveCell.distrna_basic!(optim_struct_wrapper.model, vcat(parameters[1:end-2],parameters[end]), optim_struct_wrapper.maxrnaFC, optim_struct_wrapper.utileMat.Qrna) 
         error = 0.  
         for i in eachindex(optim_struct_wrapper.data_fit.datatypes)
             estimate_signal = optim_struct_wrapper.data_fit.datatypes[i](i, optim_struct_wrapper)

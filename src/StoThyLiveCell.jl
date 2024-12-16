@@ -4,6 +4,7 @@ using LinearAlgebra
 using ExponentialUtilities
 using DocStringExtensions
 using UnPack
+using Logging
 
 using Optimization
 using OptimizationOptimJL
