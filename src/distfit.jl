@@ -29,8 +29,6 @@ end
 function (f::LikelihoodRNA)(estimate_signal::Vector, ref_signal::Vector; kwargs...)
     estimate_signal_ = @. max(estimate_signal, 0)
     ind = @. Int(floor(ref_signal) + 1) # because the index is from 0 
-    println(maximum(ind))
-    println(minimum(ind))
     -sum(log.(estimate_signal_[ind] .+ 1e-6)) # add a small quantity to avoid log(0)
 end
 
