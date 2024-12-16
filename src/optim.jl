@@ -80,7 +80,7 @@ function ini_data(optim_struct::OptimStruct, FRange; kwargs...)
             ulimit = findlast(data.data[i][1] .<=FRange[i][2])
             datatemp = (data.data[i][1][llimit:ulimit], data.data[i][2][llimit:ulimit],) 
         elseif typeof(optim_struct.dist[i]) == Distribution_RNA
-            datatemp = data.data[i][(data.data[i] .>=FRange[i][1]) & (data.data[i] .<=FRange[i][2])]
+            datatemp = data.data[i][(data.data[i] .>=FRange[i][1]) .& (data.data[i] .<=FRange[i][2])]
         else
             datatemp = data.data[i]
         end
