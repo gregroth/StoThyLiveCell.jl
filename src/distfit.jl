@@ -9,6 +9,11 @@ struct LikelihoodRNA <: AbstractDistanceFitRNA end
 
 struct LsqSurvival <: AbstractDistanceFitBurst end
 
+struct LsqSurvivalLogLin <: AbstractDistanceFitBurst 
+    plog::Int
+end
+
+
 struct LsqProb <: AbstractDistanceFitBurst end
 
 
@@ -32,8 +37,12 @@ function (f::LikelihoodRNA)(estimate_signal::Vector, ref_signal::Vector; kwargs.
     -sum(log.(estimate_signal_[ind] .+ 1e-6)) # add a small quantity to avoid log(0)
 end
 
-function (f::AbstractDistanceFitBurst)(estimate_signal::Vector, ref_signal::Tuple{Vector,Vector}; kwargs...)
+function (f::LsqSurvival)(estimate_signal::Vector, ref_signal::Tuple{Vector,Vector}; kwargs...)
     sum((log.(estimate_signal) - log.(ref_signal[2])).^2)/length(estimate_signal)
+end
+
+function (f::LsqSurvivalLogLin)(estimate_signal::Vector, ref_signal::Tuple{Vector,Vector}; kwargs...)
+    (f.plog * sum((log.(estimate_signal) - log.(ref_signal[2])).^2) + (1-f.plog) * sum(((estimate_signal) - (ref_signal[2])).^2) )/length(estimate_signal)
 end
 
 function (f::LsqProb)(estimate_signal_tot::Float64, ref_signal::Float64; kwargs...)
