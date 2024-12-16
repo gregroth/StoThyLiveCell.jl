@@ -11,7 +11,7 @@ struct LsqSurvival <: AbstractDistanceFitBurst end
 
 "weighted average of the lsq on the linear data and the log data"
 struct LsqSurvivalLogLin <: AbstractDistanceFitBurst 
-    plog::Int
+    plog::Float32
 end
 
 
