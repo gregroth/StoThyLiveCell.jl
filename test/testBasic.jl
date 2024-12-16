@@ -345,7 +345,7 @@ end
     #setting up the optimiziation
     optimtest = StoThyLiveCell.OptimStruct{typeof(data), typeof(dist), typeof(model)}(data,dist,model)
 
-    SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
+    SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0, .1),]
 
     FRange = [(0,200),(0,55),]
     fixedparameters = [1.]

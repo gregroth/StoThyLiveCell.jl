@@ -15,7 +15,7 @@ struct OptimStructWrapper{DF,DI,M,EF}
     data_fit::DF
     dist::DI
     model::M
-    SRange::Vector{Tuple{Int64, Int64}}
+    SRange::Vector{Tuple{Float32, Float32}}
     maxrnaLC::Int
     maxrnaFC::Int
     freeparametersidx::Vector{Int}
