@@ -320,12 +320,12 @@ end
     datafile= load("./data_test.jld2") ;
     data_test = datafile["data_test"];
 
-    datatype = (StoThyLiveCell.Survival_InterBurst(), StoThyLiveCell.Distribution_RNA(),)
-    datalist = data_test[[1,8]]
+    datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(), StoThyLiveCell.Distribution_RNA(),)
+    datalist = data_test[[1,2,8]]
     datagroup = StoThyLiveCell.FixedAndLiveCellData()
-    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LikelihoodRNA(),)
+    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LikelihoodRNA(),)
     maxrnaLC = 10
-    maxrnaFC = maximum(datalist[2])
+    maxrnaFC = 55
     detectionLimitLC = 1
     detectionLimitNS = 2
 
@@ -347,7 +347,7 @@ end
 
     SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0, .1),]
 
-    FRange = [(0,200),(0,55),]
+    FRange = [(0,200),(0,7), (0,55),]
     fixedparameters = [1.]
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9,11]
