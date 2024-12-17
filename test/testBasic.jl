@@ -176,10 +176,10 @@ end
     datafile= load("./data_test.jld2") ;
     data_test = datafile["data_all"];
 
-    datatype = (StoThyLiveCell.Survival_InterBurst(),)#StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
-    datalist = data_test[[2]]
+    datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
+    datalist = data_test[[2,1,5,6,7]]
     datagroup = StoThyLiveCell.LiveCellData()
-    dist = (StoThyLiveCell.LsqSurvival(), )#StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
+    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10
     maxrnaFC = 40
     detectionLimitLC = 1
@@ -204,7 +204,7 @@ end
 
     SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
 
-    FRange = [(0,200),]#(0,7),(0,0),(0,0),(0,0),]
+    FRange = [(0,200),(0,7),(0,0),(0,0),(0,0),]
     fixedparameters = [1.]
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9]
@@ -217,7 +217,7 @@ end
 
     freeparameters = [.01,.01,.01,.01,.1,.1,.1,.1,10]
 
-    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, zeros(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
+    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, ones(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
     Qrna = zeros(model.nbstate*(maxrnaFC+1),model.nbstate*(maxrnaFC+1))
     utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs, Qrna=Qrna)
     
@@ -512,10 +512,10 @@ end
     datafile= load("./data_test.jld2") ;
     data_test = datafile["data_all"];
 
-    datatype = (StoThyLiveCell.Survival_InterBurst(),)#StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
-    datalist = data_test[[2]]
+    datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
+    datalist = data_test[[2,1,5,6,7]]
     datagroup = StoThyLiveCell.LiveCellData()
-    dist = (StoThyLiveCell.LsqSurvival(), )#StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
+    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10
     maxrnaFC = 40
     detectionLimitLC = 1
@@ -540,7 +540,7 @@ end
 
     SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
 
-    FRange = [(0,200),]#(0,7),(0,0),(0,0),(0,0),]
+    FRange = [(0,200),(0,7),(0,0),(0,0),(0,0),]
     fixedparameters = [1.]
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9]

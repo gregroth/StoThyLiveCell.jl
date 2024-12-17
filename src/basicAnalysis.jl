@@ -128,7 +128,7 @@ function mo_basics_wosinglet(model::StandardStoModel, parameters::Vector{Float64
     Q[:,end] = ones(size(Q,1))
     b = zeros(size(Q,1))
     b[end] = 1
-    ssp .= Q' \ b
+    ssp = Q' \ b
     #evs = eigvecs(P')
     #ssp = normalizemat!(real.(evs[:,end]))
     stateTr = [x for x in detectionlimitNS*model.nbstate+1 :(maxrna+1)*model.nbstate]
