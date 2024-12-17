@@ -20,7 +20,7 @@ include("optim.jl")
 include("utiles.jl")
 
 export StandardStoModel, StoModel, ModelOutput
-export mo_basics, mo_mnascent, mo_ontime, mo_offtime, mo_nextbursttime, mo_pon, mo_interburstcorr, mo_avgintensity
+export mo_basics, mean_nasentrna, survial_burst,survival_interburst, survival_interburst, prob_burst, correlation_interburst,intensity_burst
 export plotAll
 
 export LikelihoodRNA, LsqSurvival, LsqProb, LsqNumber

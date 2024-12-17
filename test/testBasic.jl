@@ -2,7 +2,7 @@ using StoThyLiveCell
 using Test
 using DataFrames, FileIO, JLD2
 using BenchmarkTools
-#= @testset "Test 2s3r model" begin
+@testset "Test 2s3r model" begin
     #define the 2s 3r model
     #(r12,r21,r23,r32,k1on,k2on,k3on,koff)
     Qstate = [0    8    4    0    0    0;
@@ -23,11 +23,11 @@ using BenchmarkTools
 
     P1 = StoModel(model1, parameters, maxrna)
 
-    timevec = 1:1:200
-    timevec_on = 1:1:10
-    timevec_int = 1:1:20
+    timevec = collect(1:1:200)
+    timevec_on = collect(1:1:10)
+    timevec_int = collect(1:1:20)
 
-    (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =  ModelOutput(model1, parameters, maxrna,detectionLimitLC, detectionLimitNS, timevec_on[end],timevec[end],timevec[end],timevec_int[end])
+    (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =  StoThyLiveCell.ModelOutput(model1, parameters, maxrna,detectionLimitLC, detectionLimitNS, timevec_on[end],timevec[end],timevec[end],timevec_int[end])
 
 
     @test mean_nascentrna ≈ 3.0337754651143656
@@ -61,21 +61,21 @@ end
     detectionLimitLC = 1
     detectionLimitNS = 2
 
-    timevec = 1:1:200
-    timevec_on = 1:1:10
-    timevec_intensity = 1:1:20
+    timevec = collect(1:1:200)
+    timevec_on = collect(1:1:10)
+    timevec_int = collect(1:1:20)
     
-    (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =  ModelOutput(model1, parameters, maxrna,detectionLimitLC, detectionLimitNS, timevec_on[end],timevec[end],timevec[end],timevec_intensity[end])
+    (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =  StoThyLiveCell.ModelOutput(model1, parameters, maxrna,detectionLimitLC, detectionLimitNS, timevec_on[end],timevec[end],timevec[end],timevec_int[end])
 
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna, detectionLimitLC, detectionLimitNS,) 
 
-    mnascent_s = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate, detectionLimitNS) 
-    survivalon_s = StoThyLiveCell.mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
-    survivaloff_s = StoThyLiveCell.mo_offtime(PabsOff, weightsTr_off,timevec)
-    survivalnb_s = StoThyLiveCell.mo_nextbursttime(sspTr_off,PabsOff,timevec)
-    pburst_s = StoThyLiveCell.mo_pon(ssp,stateTr_on)
-    corr_s = StoThyLiveCell.mo_interburstcorr(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
-    avgint_s =StoThyLiveCell.mo_avgintensity(detectionLimitLC, P,Pabs, sspTr_off,stateAbs_on, stateTr_on,timevec_intensity, model1.nbstate, maxrna)
+    mnascent_s = StoThyLiveCell.mean_nascentrna(ssp, maxrna, stateTr, model1.nbstate, detectionLimitNS) 
+    survivalon_s = StoThyLiveCell.survival_burst(P, ssp,stateTr_on, stateAbs_on,timevec_on)
+    survivaloff_s = StoThyLiveCell.survival_interburst(PabsOff, weightsTr_off,timevec)
+    survivalnb_s = StoThyLiveCell.survival_nextburst(sspTr_off,PabsOff,timevec)
+    pburst_s = StoThyLiveCell.prob_burst(ssp,stateTr_on)
+    corr_s = StoThyLiveCell.correlation_interburst(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
+    avgint_s =StoThyLiveCell.intensity_burst(detectionLimitLC, P,Pabs, sspTr_off,stateTr_on, stateAbs_on,timevec_int, model1.nbstate, maxrna)
     @test mean_nascentrna ≈ mnascent_s
     @test prob_burst ≈ pburst_s
     @test correlation_interburst ≈ corr_s
@@ -107,24 +107,24 @@ end
     detectionLimitLC = 1
     detectionLimitNS = 2
 
-    timevec = 1:1:200
-    timevec_on = 1:1:10
-    timevec_intensity = 1:1:20
+    timevec = collect(1:1:200)
+    timevec_on = collect(1:1:10)
+    timevec_intensity = collect(1:1:20)
     
  
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna, detectionLimitLC, detectionLimitNS) 
-    mnascent_s = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate, detectionLimitNS) 
-    survivalon_s = StoThyLiveCell.mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
-    survivaloff_s = StoThyLiveCell.mo_offtime(PabsOff, weightsTr_off,timevec)
-    pburst_s = StoThyLiveCell.mo_pon(ssp,stateTr_on)
-    corr_s = StoThyLiveCell.mo_interburstcorr(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
+    mnascent_s = StoThyLiveCell.mean_nascentrna(ssp, maxrna, stateTr, model1.nbstate, detectionLimitNS) 
+    survivalon_s = StoThyLiveCell.survival_burst(P, ssp,stateTr_on, stateAbs_on,timevec_on)
+    survivaloff_s = StoThyLiveCell.survival_interburst(PabsOff, weightsTr_off,timevec)
+    pburst_s = StoThyLiveCell.prob_burst(ssp,stateTr_on)
+    corr_s = StoThyLiveCell.correlation_interburst(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
 
    StoThyLiveCell.mo_basics!(model1, parameters, maxrna, P,ssp, stateTr_on, stateAbs_on, weightsTr_off,PabsOff) 
-    mnascent_s2 = StoThyLiveCell.mo_mnascent(ssp, maxrna, stateTr, model1.nbstate, detectionLimitNS) 
-    survivalon_s2 = StoThyLiveCell.mo_ontime(P, ssp,stateTr_on, stateAbs_on,timevec_on)
-    survivaloff_s2 = StoThyLiveCell.mo_offtime(PabsOff, weightsTr_off,timevec)
-    pburst_s2 = StoThyLiveCell.mo_pon(ssp,stateTr_on)
-    corr_s2 = StoThyLiveCell.mo_interburstcorr(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
+    mnascent_s2 = StoThyLiveCell.mean_nascentrna(ssp, maxrna, stateTr, model1.nbstate, detectionLimitNS) 
+    survivalon_s2 = StoThyLiveCell.survival_burst(P, ssp,stateTr_on, stateAbs_on,timevec_on)
+    survivaloff_s2 = StoThyLiveCell.survival_interburst(PabsOff, weightsTr_off,timevec)
+    pburst_s2 = StoThyLiveCell.prob_burst(ssp,stateTr_on)
+    corr_s2 = StoThyLiveCell.correlation_interburst(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
 
     @test mnascent_s ≈ mnascent_s2
     @test pburst_s≈ pburst_s2
@@ -154,16 +154,16 @@ end
     detectionLimitLC = 1
     detectionLimitNS = 2
 
-    timevec = 1:1:200
-    timevec_on = 1:1:10
-    timevec_intensity = 1:1:20
+    timevec = collect(1:1:200)
+    timevec_on = collect(1:1:10)
+    timevec_intensity = collect(1:1:20)
     
  
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna, detectionLimitLC, detectionLimitNS) 
-    survivalnb_s = StoThyLiveCell.mo_nextbursttime(sspTr_off,PabsOff,timevec)
+    survivalnb_s = StoThyLiveCell.survival_nextburst(sspTr_off,PabsOff,timevec)
 
     StoThyLiveCell.mo_basics!(model1, parameters, maxrna, P,ssp, stateTr_on, stateAbs_on, weightsTr_off,PabsOff,sspTr_off) 
-    survivalnb_s2 = StoThyLiveCell.mo_nextbursttime(sspTr_off,PabsOff,timevec)
+    survivalnb_s2 = StoThyLiveCell.survival_nextburst(sspTr_off,PabsOff,timevec)
 
     @test survivalnb_s[1] ≈  survivalnb_s2[1]
 
@@ -176,10 +176,10 @@ end
     datafile= load("./data_test.jld2") ;
     data_test = datafile["data_all"];
 
-    datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
-    datalist = data_test[[2,1,5,6,7]]
+    datatype = (StoThyLiveCell.Survival_InterBurst(),)#StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
+    datalist = data_test[[2]]
     datagroup = StoThyLiveCell.LiveCellData()
-    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
+    dist = (StoThyLiveCell.LsqSurvival(), )#StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
     maxrnaLC = 10
     maxrnaFC = 40
     detectionLimitLC = 1
@@ -204,7 +204,7 @@ end
 
     SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
 
-    FRange = [(0,200),(0,7),(0,0),(0,0),(0,0),]
+    FRange = [(0,200),]#(0,7),(0,0),(0,0),(0,0),]
     fixedparameters = [1.]
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9]
@@ -362,7 +362,7 @@ end
     @test typeof(sol[2].u) <: Vector
 end
 
- =#
+
 
 
 @testset "Test optim for live cells without singlets" begin
@@ -502,4 +502,63 @@ end
     @test survival_interburst[200] ≈  survival_interburst2[200] 
     @test survival_burst[2] ≈ survival_burst2[2]
     @test survival_burst[10] ≈  survival_burst2[10] 
+end
+
+
+
+
+@testset "Test optim error function, without singlet" begin
+
+    datafile= load("./data_test.jld2") ;
+    data_test = datafile["data_all"];
+
+    datatype = (StoThyLiveCell.Survival_InterBurst(),)#StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
+    datalist = data_test[[2]]
+    datagroup = StoThyLiveCell.LiveCellData()
+    dist = (StoThyLiveCell.LsqSurvival(), )#StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
+    maxrnaLC = 10
+    maxrnaFC = 40
+    detectionLimitLC = 1
+    detectionLimitNS = 2
+    burstsinglet = :without
+
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS, burstsinglet)
+
+    #model
+    Qstate = [0    8    4    0    0    0;
+    7    0    0    4    0    0;
+    3    0    0    8    2    0;
+    0    3    6    0    0    2;
+    0    0    1    0    0    8;
+    0    0    0    1    5    0]
+    paramToRate_idx = findall(Qstate .>0)
+    paramToRate_val = Qstate[findall(Qstate .>0)]
+    model = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5],[9,9,9],10)
+
+    #setting up the optimiziation
+    optim_struct = StoThyLiveCell.OptimStruct{typeof(data), typeof(dist), typeof(model)}(data,dist,model)
+
+    SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
+
+    FRange = [(0,200),]#(0,7),(0,0),(0,0),(0,0),]
+    fixedparameters = [1.]
+    #indices of the free parameters
+    freeparametersidx = [1,2,3,4,5,6,7,8,9]
+
+
+    err_func = StoThyLiveCell.ini_optim_withoutsinglet(optim_struct, optim_struct.data.datagroup)
+    
+    data_fit = StoThyLiveCell.ini_data(optim_struct, FRange)
+
+
+    freeparameters = [.01,.01,.01,.01,.1,.1,.1,.1,10]
+
+    (nascentbin, P, ssp, stateTr, stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos, rnanbvec_on, weightsPre_on_wos) = StoThyLiveCell.mo_basics_wosinglet(model, ones(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
+    Qrna = zeros(model.nbstate*(maxrnaFC+1),model.nbstate*(maxrnaFC+1))
+    utileMat = (nascentbin=nascentbin, P=P, ssp=ssp, stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, totnbs=totnbs, Pwos=Pwos, stateAbs_on_wos=stateAbs_on_wos, statePre_on_wos=statePre_on_wos, weightsAbs_off_wos=weightsAbs_off_wos, sspTr_off_wos=sspTr_off_wos, weightsAbs_on=weightsAbs_on, sspPreB=sspPreB, weightsTr_on=weightsTr_on, PabsOff=PabsOff, weightsTr_on_wos=weightsTr_on_wos, weightsAbsorbed_off_wos=weightsAbsorbed_off_wos, sspwos=sspwos, weightsPre_on_and_on=weightsPre_on_and_on, Rn=Rn, NR=NR, Nc=Nc, Qn=Qn, Nn=Nn, weightsTr_off_wos=weightsTr_off_wos, Pabs_wos=Pabs_wos, weightsON_wos=weightsON_wos, rnanbvec_on=rnanbvec_on, weightsPre_on_wos=weightsPre_on_wos, Qrna=Qrna)
+    optim_struct_wrapper = StoThyLiveCell.OptimStructWrapper{typeof(optim_struct.data),typeof(optim_struct.dist), typeof(optim_struct.model),typeof(err_func), typeof(utileMat)}(optim_struct.data, data_fit, optim_struct.dist, optim_struct.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
+
+   @btime $err_func($freeparameters,$optim_struct_wrapper )
+
+    @test err_func(freeparameters,optim_struct_wrapper ) >= 0
 end

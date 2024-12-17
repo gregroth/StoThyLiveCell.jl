@@ -61,29 +61,29 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
         if data.datagroup == LiveCellData()
             (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper.model, bfparameters, maxrnaLC, optim_struct_wrapper.data_fit.detectionLimitLC, optim_struct_wrapper.data_fit.detectionLimitNS, 10,200,200,10) 
             bfparameters_mrna = vcat(bfparameters[1:end-1],.01)
-            mrna_distribution_model = StoThyLiveCell.mo_rna(optim_struct_wrapper.model, bfparameters_mrna, optim_struct_wrapper.maxrnaFC) 
+            mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper.model, bfparameters_mrna, optim_struct_wrapper.maxrnaFC) 
         elseif data.datagroup == FixedCellData()
             bfparameters_lc = vcat(bfparameters[1:end-1],1.)
             (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper.model,bfparameters_lc, maxrnaLC, optim_struct_wrapper.data_fit.detectionLimitLC, optim_struct_wrapper.data_fit.detectionLimitNS, 10,200,200,10) 
-            mrna_distribution_model = StoThyLiveCell.mo_rna(optim_struct_wrapper.model, bfparameters, optim_struct_wrapper.maxrnaFC) 
+            mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper.model, bfparameters, optim_struct_wrapper.maxrnaFC) 
         elseif data.datagroup == FixedAndLiveCellData()
             (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper.model, bfparameters[1:end-1], maxrnaLC, optim_struct_wrapper.data_fit.detectionLimitLC, optim_struct_wrapper.data_fit.detectionLimitNS, 10,200,200,10) 
             bfparameters_mrna = vcat(bfparameters[1:end-1],bfparameters[end])
-            mrna_distribution_model = StoThyLiveCell.mo_rna(optim_struct_wrapper.model, bfparameters_mrna, optim_struct_wrapper.maxrnaFC) 
+            mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper.model, bfparameters_mrna, optim_struct_wrapper.maxrnaFC) 
         end
     elseif data.burstsinglet == :without
         if data.datagroup == LiveCellData()
             (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput_wosinglet(optim_struct_wrapper.model, bfparameters, maxrnaLC, optim_struct_wrapper.data_fit.detectionLimitLC, optim_struct_wrapper.data_fit.detectionLimitNS, 10,200,200,10) 
             bfparameters_mrna = vcat(bfparameters[1:end-1],.01)
-            mrna_distribution_model = StoThyLiveCell.mo_rna(optim_struct_wrapper.model, bfparameters_mrna, optim_struct_wrapper.maxrnaFC) 
+            mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper.model, bfparameters_mrna, optim_struct_wrapper.maxrnaFC) 
         elseif data.datagroup == FixedCellData()
             bfparameters_lc = vcat(bfparameters[1:end-1],1.)
             (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper.model,bfparameters_lc, maxrnaLC, optim_struct_wrapper.data_fit.detectionLimitLC, optim_struct_wrapper.data_fit.detectionLimitNS, 10,200,200,10) 
-            mrna_distribution_model = StoThyLiveCell.mo_rna(optim_struct_wrapper.model, bfparameters, optim_struct_wrapper.maxrnaFC) 
+            mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper.model, bfparameters, optim_struct_wrapper.maxrnaFC) 
         elseif data.datagroup == FixedAndLiveCellData()
             (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput_wosinglet(optim_struct_wrapper.model, bfparameters[1:end-1], maxrnaLC, optim_struct_wrapper.data_fit.detectionLimitLC, optim_struct_wrapper.data_fit.detectionLimitNS, 10,200,200,10) 
             bfparameters_mrna = vcat(bfparameters[1:end-1],bfparameters[end])
-            mrna_distribution_model = StoThyLiveCell.mo_rna(optim_struct_wrapper.model, bfparameters_mrna, optim_struct_wrapper.maxrnaFC) 
+            mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper.model, bfparameters_mrna, optim_struct_wrapper.maxrnaFC) 
         end
     end
     estimate_signal = (survival_burst = survival_burst, survival_interburst = survival_interburst, survival_nextburst = survival_nextburst, prob_burst = prob_burst, mean_nascentrna = mean_nascentrna, correlation_interburst = correlation_interburst, intensity_burst = intensity_burst, mrna_distribution = mrna_distribution_model)    
@@ -223,91 +223,50 @@ end
 
 function (f::Survival_Burst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit = optimstruct
-    
     @unpack stateTr_on, stateAbs_on, P, ssp = utileMat
 
-
-    weightsAbs_on = ssp[stateAbs_on]./sum(ssp[stateAbs_on])     
-    weightsTr_on = weightsAbs_on' * P[stateAbs_on,stateTr_on]./sum(weightsAbs_on' * P[stateAbs_on,stateTr_on])
-
-    PabsOn = P[stateTr_on,stateTr_on]
-    tempdist = weightsTr_on
-    survivalspot_model_full = Vector{Float64}(undef,data_fit.data[dataidx][1][end])
-    for i in 1:data_fit.data[dataidx][1][end]
-        tempdist = tempdist* PabsOn
-        survivalspot_model_full[i] = sum(tempdist)
-    end 
-    return survivalspot_model_full[data_fit.data[dataidx][1]]
+    return survival_burst(P, ssp, stateTr_on, stateAbs_on, data_fit.data[dataidx][1]) 
+   
 end
 
 function (f::Survival_InterBurst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit = optimstruct
-    
     @unpack weightsTr_off, PabsOff = utileMat
-
-    tempdist = weightsTr_off
-    survivaldark_model_full = Vector{Float64}(undef,data_fit.data[dataidx][1][end])
-    for i in 1:data_fit.data[dataidx][1][end]
-        tempdist = PabsOff'*tempdist
-        survivaldark_model_full[i] = sum(tempdist)
-    end 
-    return survivaldark_model_full[data_fit.data[dataidx][1]]
+    return survival_interburst(PabsOff, weightsTr_off,data_fit.data[dataidx][1])
 end
 
 
 function (f::Survival_NextBurst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit = optimstruct
-    
     @unpack sspTr_off, PabsOff = utileMat
 
-    tempdist = sspTr_off'
-    survivalnextburst_model = Vector{Float64}(undef,data_fit.data[dataidx][1][end])
-    for i in 1:data_fit.data[dataidx][1][end]
-        tempdist = tempdist* PabsOff
-        survivalnextburst_model[i] = sum(tempdist)
-    end 
-    return survivalnextburst_model
+    return survival_nextburst(sspTr_off::Vector{Float64},PabsOff,data_fit.data[dataidx][1])
 end
 
 
 function (f::Mean_Nascent)(dataidx::Int, optimstruct::OptimStructWrapper)
-    @unpack utileMat = optimstruct
-    
+    @unpack utileMat, data_fit = optimstruct
     @unpack stateTr, ssp = utileMat
 
-    pB = sum(ssp[stateTr])
-    prna = ssp'kron(diagm(ones(optimstruct.maxrnaLC+1)),ones(optimstruct.model.nbstate))
-    return [x for x in optimstruct.data_fit.detectionLimitNS : optimstruct.maxrnaLC]'prna[optimstruct.data_fit.detectionLimitNS+1:end]./pB
+    return mean_nascentrna(ssp, optimstruct.maxrnaLC, stateTr, optimstruct.model.nbstate, data_fit.detectionLimitNS)
 end
 
 
 
 function (f::Prob_Burst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat = optimstruct
-    
     @unpack stateTr_on, ssp = utileMat
 
-    return sum(ssp[stateTr_on])
+    return prob_burst(ssp,stateTr_on) 
 
 end
 
 
 function (f::Intensity_Burst)(dataidx::Int, optimstruct::OptimStructWrapper)
-    @unpack utileMat, data_fit = optimstruct
-    
+    @unpack utileMat, data_fit, model, maxrnaLC = optimstruct
     @unpack stateTr_on, stateAbs_on, Pabs, P, sspTr_off = utileMat
 
-    weightsON = normalizemat!(P[stateAbs_on,stateTr_on]'*sspTr_off)
- 
-    rnanbvec_on = vcat(kron([x for x in detectionlimitLC : maxrna],ones(nbstate)))
-
-    intensitytemp = weightsON
-    intensity_model = Vector{Float64}(undef,data_fit.data[dataidx][1][end])
-    for i in 1:data_fit.data[dataidx][1][end]
-        intensity_model[i] = (rnanbvec_on'*intensitytemp)[1]
-        intensitytemp =  Pabs'*intensitytemp
-    end 
-    return intensity_model./maximum(intensity_model)
+    return intensity_burst(data_fit.detectionLimitLC, P, Pabs, sspTr_off,stateTr_on, stateAbs_on,data_fit.data[dataidx][1], model.nbstate, maxrnaLC)
 end
 
 
@@ -316,55 +275,15 @@ function (f::Correlation_InterBurst)(dataidx::Int, optimstruct::OptimStructWrapp
     
     @unpack stateTr_on, stateAbs_on, weightsTr_off, P = utileMat
 
-    #correlation of the interburst durations
-    Qn = P[stateAbs_on,stateAbs_on]
-    Rn = P[stateAbs_on,stateTr_on]
-
-    Qb = P[stateTr_on,stateTr_on]
-    Rb = P[stateTr_on,stateAbs_on]
-    c = ones(length(stateAbs_on))
-
-    Nn = (I - Qn)^(-1)
-    Nb = (I - Qb)^(-1)
-
-    NR = Nb*Rb
-    Nc = Nn*c
-
-    cortemp=0
-    wpre = weightsTr_off
-    wpre2 = Rn'*wpre./sum(wpre)
-    wpre3 = NR'*wpre2/sum(wpre2)
-    ET2t = Nc'*wpre3 
-
-    for t=1:15000
-        cortemp = cortemp + t*ET2t[1]*sum(Rn'*wpre)
-        wpre = Qn'*wpre
-        wpre2 = Rn'*wpre./sum(wpre)
-        wpre3 = NR'*wpre2./sum(wpre2)
-        ET2t = Nc'*wpre3
-        if sum(wpre)<1e-6
-            break
-        end
-    end
-    Et1 = Nc'weightsTr_off 
-    M2T = Nc'*(2*Nn'-I)*weightsTr_off
-    VarT = M2T[1] - Et1[1]^2
-
-    return (cortemp-Et1[1]^2)/VarT
+  return correlation_interburst(P, weightsTr_off,stateAbs_on, stateTr_on, 15000)
 end
 
 
 
 function (f::Distribution_RNA)(dataidx::Int, optimstruct::OptimStructWrapper)
-    @unpack utileMat, model, maxrnaFC = optimstruct
+    @unpack utileMat, maxrnaFC, model = optimstruct
     @unpack Qrna = utileMat
-    Qrna[:,end] = ones(model.nbstate* (maxrnaFC+1))
-    b = zeros(model.nbstate* (maxrnaFC+1))
-    b[end] = 1
-    ssp = Qrna' \ b
-    ssd_rna= ssp'kron(diagm(ones(maxrnaFC+1)), ones(model.nbstate))
-    ssd_rna[ssd_rna .<=0] .= 1e-9 
-    return ssd_rna'
+    return distribution_mrna(Qrna, maxrnaFC, model.nbstate)
 end
 
 
