@@ -167,8 +167,13 @@ function mo_basics_wosinglet(model::StandardStoModel, parameters::Vector{Float64
  =#
 
  #survival inter-burst
-    evswos = eigvecs(Pwos')
-    sspwos = normalizemat!(real.(evswos[:,end]))
+    Qwos = Pwos-I
+    Qwos[:,end] = ones(size(Qwos,1))
+    bwos = zeros(size(Qwos,1))
+    bwos[end] = 1
+    sspwos = Qwos' \ bwos
+    #evswos = eigvecs(Pwos')
+    #sspwos = normalizemat!(real.(evswos[:,end]))
     
     stateAbs_on_wos = vcat(stateAbs_on,[x for x in totnbs+1 : totnbs+length(stateTr_on)])
     statePre_on_wos = [x for x in totnbs+1 : totnbs+length(stateTr_on)]
@@ -254,8 +259,13 @@ change vector and matrices used in ALL the statistics
 """
 function mo_basics!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64},  stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}, Pabs::Array{Float64,2}) 
     P .= StoModel(model, parameters, maxrna)
-    evs = eigvecs(P')
-    ssp .= normalizemat!(real.(evs[:,end]))
+    Q = P-I
+    Q[:,end] = ones(size(Q,1))
+    b = zeros(size(Q,1))
+    b[end] = 1
+    ssp .= Q' \ b
+    #evs = eigvecs(P')
+    #ssp .= normalizemat!(real.(evs[:,end]))
     weightsAbs_off = normalizemat!(ssp[stateTr_on])
     weightsTr_off .= normalizemat!(P[stateTr_on,stateAbs_on]'*weightsAbs_off)
     PabsOff .= P[stateAbs_on,stateAbs_on]
