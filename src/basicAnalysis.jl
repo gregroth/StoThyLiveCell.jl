@@ -136,7 +136,7 @@ function ModelOutput(model::StandardStoModel, parameters::Vector{Float64}, maxrn
         intensitytemp = intensitytemp* Pabs
     end 
     intensity_model .= intensity_model./maximum(intensity_model) 
-    return  mnascentmrna_model, pburst_model, survivalspot_model_full,survivaldark_model_full, survivalnextburst_model, corr_interburst, intensity_model
+    return  survivalspot_model_full,survivaldark_model_full, survivalnextburst_model,  pburst_model, mnascentmrna_model, corr_interburst, intensity_model
 end
 
 
@@ -160,6 +160,138 @@ function mo_basics(model::StandardStoModel, parameters::Vector{Float64}, maxrna:
     return P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off, Pabs
 end
 
+
+"""
+    ModelOutput_wosinglet(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, detectionlimitLC::Int64, detectionlimitNS::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
+
+Return the main outputs of the model: mean nb of nascent mrna, probability to observe a burst, ON time survival,
+OFF time survival,next burst time survival, correlation of consecutive inter burst evts, average intensity track
+#Arguments
+- `model::StandardStoModel:` a model topology
+- `parameters::Vector{Float64}`: list of the rates of the transition between the 'promoter' states
+- `maxrna::Int`: maximum number of mRNA considered in the model
+- `detectionlimitLC::Int64`: minimum number of mRNA detectable in live cell experiment
+- `detectionlimitNS::Int64`: minimum number of nascent mRNA detectable in FISH experiment 
+- `tmaxon::Int64`: maximum time for the ON time suvival probabilities 
+- `tmaxoff::Int64`: maximum time for the OFF time suvival probabilities 
+- `tmaxnextburst::Int64`: maximum time for the Next burst time suvival probabilities 
+- `tmaxintensity::Int64`: maximum time for the averaged track intensity 
+"""
+function ModelOutput_wosinglet(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, detectionlimitLC::Int64, detectionlimitNS::Int64, tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64) 
+    timevec_on = 1:1:tmaxon
+    timevec_off = 1:1:tmaxoff
+    timevec_nextburst = 1:1:tmaxnextburst
+    timevec_intensity = 1:1:tmaxintensity
+
+    (nascentbin, P, ssp, stateTr, stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos, rnanbvec_on) = mo_basics_wosinglet(model, parameters, maxrna, detectionlimitLC, detectionlimitNS) 
+   
+    mean_nascentrna = mo_mnascent_wosinglet(ssp, nascentbin, stateTr, maxrna, detectionLimitNS) 
+    survival_burst = mo_ontime_wosinglet( P, stateTr_on, weightsTr_on,timevec_on) 
+    survival_interburst = mo_offtime_wosinglet(PabsOff, weightsTr_on_wos,timevec_off)  
+    survival_nextburst = mo_nextbursttime_wosinglet(weightsAbsorbed_off_wos,PabsOff, timevec_nextburst)  
+    prob_burst = mo_pon_wosinglet(sspwos,weightsPre_on_and_on, stateTr_on) 
+    correlation_interburst = mo_interburstcorr_wosinglet(Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, 15000) 
+    intensity_burst = mo_avgintensity_wosinglet(rnanbvec_on, Pabs_wos, weightsON_wos,timevec_intensity)  
+
+    return  survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst
+end
+
+
+
+"""
+    mo_basics_wosinglet(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, detectionlimitLC::Int64, detectionlimitNS::Int64)
+
+return important vectors and matrices used in the analysis of the model without burst singlets
+"""
+function mo_basics_wosinglet(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, detectionlimitLC::Int64, detectionlimitNS::Int64) 
+    P = StoModel(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64)
+    evs = eigvecs(P')
+    ssp = normalizemat!(real.(evs[:,end]))
+    stateTr = [x for x in detectionlimitNS*model.nbstate+1 :(maxrna+1)*model.nbstate]
+    stateTr_on = [x for x in detectionlimitLC*model.nbstate+1 :(maxrna+1)*model.nbstate]
+    stateAbs_on = [x for x in 1 : detectionlimitLC*model.nbstate]
+    nascentbin = kron(diagm(ones(maxrna+1)),ones(model.nbstate))
+#calculation of transition matrix adding the singlet states
+    totnbs = (maxrna+1)*model.nbstate
+    Pwos = zeros(T, totnbs+length(stateTr_on),totnbs+length(stateTr_on))
+    for i in axes(P,1)
+        if i in stateTr_on
+            for j in axes(P)
+                Pwos[i,j] = P[i,j]
+            end
+        else
+            for (j,s) in enumerate(stateTr_on)
+                Pwos[i,j+totnbs] = P[i,s]
+            end
+            for (j,s) in enumerate(stateAbs_on)
+                Pwos[i,s] = P[i,s]
+            end
+        end
+    end
+    for (i,s) in enumerate(stateTr_on)
+        for j in axes(Pwos)
+            Pwos[i+totnbs,j] = Pwos[s,j]
+        end
+    end
+
+#survival burst
+    weightsAbs_on = ssp[stateAbs_on]./sum(ssp[stateAbs_on])     
+    weightsTr_on = normalizemat!(P[stateAbs_on,stateTr_on]'*weightsAbs_on)
+
+#=     weightsAbs_off = normalizemat!(ssp[stateTr_on])
+    weightsTr_off = normalizemat!(P[stateTr_on,stateAbs_on]'*weightsAbs_off)
+ =#
+
+ #survival inter-burst
+    evswos = eigvecs(Pwos')
+    sspwos = normalizemat!(real.(evswos[:,end]))
+    
+    stateAbs_on_wos = vcat(stateAbs_on,[x for x in totnbs+1 : totnbs+length(stateTr_on)])
+    statePre_on_wos = [x for x in totnbs+1 : totnbs+length(stateTr_on)]
+
+    weightsAbs_off_wos = normalizemat!(sspwos[stateTr_on])
+    weightsTr_off_wos =  normalizemat!(Pwos[stateTr_on,stateAbs_on_wos]'*weightsAbs_off_wos)
+
+
+    PabsOff =  Pwos[stateAbs_on_wos,stateAbs_on_wos]
+
+    weightsTr_on_wos = PabsOff'*weightsTr_off_wos
+
+#survival next burst
+
+    sspTr_off_wos =normalizemat!(sspwos[stateAbs_on_wos])
+    weightsAbsorbed_off_wos = normalizemat!(PabsOff'*sspTr_off_wos)
+
+#probability burst
+
+    sspPreB = sspwos[statePre_on_wos]
+    weightsPre_on_and_on = Pwos[statePreB,stateTr_on]'*sspPreB
+
+
+    
+#correlation
+    Qn = Pwos[stateAbs_on_wos,stateAbs_on_wos]
+    Rn = Pwos[stateAbs_on_wos,stateTr_on]
+
+    Qb = Pwos[stateTr_on,stateTr_on]
+    Rb = Pwos[stateTr_on,stateAbs_on_wos]
+    c = ones(length(stateAbs_on_wos))
+
+    Nn = (I - Qn)^(-1)
+    Nb = (I - Qb)^(-1)
+
+    NR = Nb*Rb
+    Nc = Nn*c
+
+#intensity 
+
+    rnanbvec_on = vcat(kron([x for x in detectionlimitLC : maxrna],ones(model.nbstate)))
+    weightsPre_on_wos = normalizemat!(sspwos[statePre_on_wos])
+    weightsON_wos = Pwos[statePre_on_wos,stateTr_on]'*weightsPre_on_wos
+    Pabs_wos = Pwos[stateTr_on,stateTr_on]
+
+    return nascentbin, P, ssp, stateTr, stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos, rnanbvec_on
+end
 
 
 """
@@ -205,6 +337,88 @@ function mo_basics!(model::StandardStoModel, parameters::Vector{Float64}, maxrna
     PabsOff .= P[stateAbs_on,stateAbs_on]
     sspTr_off .= normalizemat!(ssp[stateAbs_on])
     Pabs .= P[stateTr_on,stateTr_on]
+end
+
+"""
+    mo_basics_wosinglet!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, P::Array{Float64,2},ssp::Vector{Float64},  stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, weightsTr_off::Vector{Float64},PabsOff::Array{Float64,2}, sspTr_off::Vector{Float64}, Pabs::Array{Float64,2})
+
+change vector and matrices used in ALL the statistics, model without burst singlets
+"""
+function mo_basics_wosinglet!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, P::Array{Float64,2}, ssp::Vector{Float64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}, totnbs::Int, Pwos::Array{Float64,2}, stateAbs_on_wos::Vector{Int64}, statePre_on_wos::Vector{Int64}, weightsAbs_off_wos::Vector{Float64}, sspTr_off_wos::Vector{Float64}, weightsAbs_on::Vector{Float64}, sspPreB::Vector{Float64}, weightsTr_on::Vector{Float64}, PabsOff::Array{Float64,2}, weightsTr_on_wos::Vector{Float64}, weightsAbsorbed_off_wos::Vector{Float64}, sspwos::Vector{Float64}, weightsPre_on_and_on::Vector{Float64}, Rn::Array{Float64,2}, NR::Array{Float64,2}, Nc::Vector{Float64}, Qn::Array{Float64,2}, Nn::Array{Float64,2}, weightsTr_off_wos::Vector{Float64}, Pabs_wos::Array{Float64,2}, weightsON_wos::Vector{Float64}) 
+    P .= StoModel(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64)
+    evs = eigvecs(P')
+    ssp .= normalizemat!(real.(evs[:,end]))
+#calculation of transition matrix adding the singlet states
+    for i in axes(P,1)
+        if i in stateTr_on
+            for j in axes(P)
+                Pwos[i,j] = P[i,j]
+            end
+        else
+            for (j,s) in enumerate(stateTr_on)
+                Pwos[i,j+totnbs] = P[i,s]
+            end
+            for (j,s) in enumerate(stateAbs_on)
+                Pwos[i,s] = P[i,s]
+            end
+        end
+    end
+    for (i,s) in enumerate(stateTr_on)
+        for j in axes(Pwos)
+            Pwos[i+totnbs,j] = Pwos[s,j]
+        end
+    end
+
+#survival burst
+    weightsAbs_on .= ssp[stateAbs_on]./sum(ssp[stateAbs_on])     
+    weightsTr_on .= normalizemat!(P[stateAbs_on,stateTr_on]'*weightsAbs_on)
+
+#=     weightsAbs_off = normalizemat!(ssp[stateTr_on])
+    weightsTr_off = normalizemat!(P[stateTr_on,stateAbs_on]'*weightsAbs_off)
+ =#
+
+ #survival inter-burst
+    evswos = eigvecs(Pwos')
+    sspwos .= normalizemat!(real.(evswos[:,end]))
+    
+    weightsAbs_off_wos .= normalizemat!(sspwos[stateTr_on])
+    weightsTr_off_wos .=  normalizemat!(Pwos[stateTr_on,stateAbs_on_wos]'*weightsAbs_off_wos)
+
+
+    PabsOff .=  Pwos[stateAbs_on_wos,stateAbs_on_wos]
+
+    weightsTr_on_wos .= PabsOff'*weightsTr_off_wos
+
+#survival next burst
+
+    sspTr_off_wos .=normalizemat!(sspwos[stateAbs_on_wos])
+    weightsAbsorbed_off_wos .= normalizemat!(PabsOff'*sspTr_off_wos)
+
+#probability burst
+
+    sspPreB .= sspwos[statePre_on_wos]
+    weightsPre_on_and_on .= Pwos[statePreB,stateTr_on]'*sspPreB
+
+
+    
+#correlation
+    Qn .= Pwos[stateAbs_on_wos,stateAbs_on_wos]
+    Rn .= Pwos[stateAbs_on_wos,stateTr_on]
+
+    Qb = Pwos[stateTr_on,stateTr_on]
+    Rb = Pwos[stateTr_on,stateAbs_on_wos]
+    c = ones(length(stateAbs_on_wos))
+
+    Nn .= (I - Qn)^(-1)
+    Nb = (I - Qb)^(-1)
+
+    NR .= Nb*Rb
+    Nc .= Nn*c
+
+#intensity 
+    weightsPre_on_wos .= normalizemat!(sspwos[statePre_on_wos])
+    weightsON_wos .= Pwos[statePre_on_wos,stateTr_on]'*weightsPre_on_wos
+    Pabs_wos .= Pwos[stateTr_on,stateTr_on]
 end
 
 """
@@ -370,4 +584,122 @@ end
 
 function distrna_basic!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, Q::Array{Float64,2}) 
     Q .= StoModel_RateMat(model, parameters, maxrna)
+end
+
+
+
+
+#-----------------------
+#wo singlets
+#--------
+
+
+
+function mo_mnascent_wosinglet(ssp::Vector{Float64}, nascentbin::Vector{Int64}, stateTr::Vector{Int64}, maxrna::Int, detectionLimitNS::Int) 
+    pB = sum(ssp[stateTr])
+    prna = ssp'nascentbin
+    return [x for x in detectionLimitNS : maxrna]'prna[detectionLimitNS+1:end]./pB
+end
+
+
+"""
+    mo_ontime_wosinglet( P::Array{Float64,2}, ssp::Vector{Float64},stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64},timevec_on::Vector{Int64})
+
+return the on time survival probabilities, without burst singlets
+"""
+function mo_ontime_wosinglet( P::Array{Float64,2}, stateTr_on::Vector{Int64}, weightsTr_on::Vector{Float64},timevec_on::StepRange{Int64,Int64}) 
+    PabsOn = P[stateTr_on,stateTr_on]
+    survivalspot_model_full = Vector{Float64}(undef,maximum(timevec_on))
+    for i in 1:maximum(timevec_on)
+        weightsTr_on = weightsTr_on* PabsOn
+        survivalspot_model_full[i] = sum(weightsTr_on)
+    end 
+    return survivalspot_model_full[timevec_on]./survivalspot_model_full[1]
+end
+
+"""
+    mo_offtime_wosinglet(PabsOff::Array{Float64,2}, weightsTr_off_wos::Vector{Float64},timevec_off::StepRange{Int64,Int64})
+
+return the off time survival probabilities, without burst singlets
+"""
+function mo_offtime_wosinglet(PabsOff::Array{Float64,2}, weightsTr_on_wos::Vector{Float64},timevec_off::StepRange{Int64,Int64}) 
+    survivaldark_model_full = Vector{Float64}(undef,maximum(timevec_off))
+    for i in 1:maximum(timevec_off)
+        weightsTr_on_wos = PabsOff'*weightsTr_on_wos
+        survivaldark_model_full[i] = sum(weightsTr_on_wos)
+    end 
+    return survivaldark_model_full[timevec_off]
+end
+
+
+"""
+    mo_nextbursttime_wosingelts(ssp::Vector{Float64},stateTr_off::Vector{Int64},timevec_nextburst::Vector{Int64})
+
+return the time to next burst survival probabilities, without burst singlets
+"""
+function mo_nextbursttime_wosinglet(weightsAbsorbed_off_wos::Vector{Float64},PabsOff::Array{Float64,2}, timevec_nextburst::StepRange{Int64,Int64})  
+    survivalnextburst_model = Vector{Float64}(undef,maximum(timevec_nextburst))
+    for i in 1:maximum(timevec_nextburst)
+        weightsAbsorbed_off_wos = PabsOff'*weightsAbsorbed_off_wos
+        survivalnextburst_model[i] = sum(weightsAbsorbed_off_wos)
+    end 
+    return survivalnextburst_model
+end
+
+
+"""
+    mo_pon_wosinglet(ssp::Vector{Float64},stateTr_on::Vector{Int64})
+
+return the probability to observe a burst in steady-state
+"""
+function mo_pon_wosinglet(sspwos::Vector{Float64},weightsPre_on_and_on::Vector{Float64}, stateTr_on::Vector{Int64}) 
+    return sum(sspwos[stateTr_on]) + sum(weightsPre_on_and_on)
+end
+
+
+"""
+    mo_interburstcorr_wosinglet( P::Array{Float64,2}, weightsTr_off::Vector{Float64},stateAbs_on::Vector{Int64}, stateTr_on::Vector{Int64}, timehorizon::Int64)
+
+return the correlation between two consecutive inter-burst events, without burst singlets
+"""
+function mo_interburstcorr_wosinglet(Rn::Array{Float64,2}, NR::Array{Float64,2}, Nc::Vector{Float64}, Qn::Array{Float64,2}, Nn::Array{Float64,2}, weightsTr_off_wos::Vector{Float64}, timehorizon::Int64) 
+    #correlation of the interburst durations
+    cortemp=0
+    wpre = weightsTr_off_wos
+    
+    
+    wpre2 = Rn'*wpre./sum(wpre)
+    wpre3 = NR'*wpre2/sum(wpre2)
+    ET2t = Nc'*wpre3 .-1
+
+    for t=1:timehorizon
+        cortemp = cortemp + t*ET2t[1]*sum(Rn'*wpre)
+        wpre = Qn'*wpre
+        wpre2 = Rn'*wpre./sum(wpre)
+        wpre3 = NR'*wpre2./sum(wpre2)
+        ET2t = Nc'*wpre3 .-1
+        if sum(wpre)<1e-6
+            break
+        end
+    end
+    Et1 = Nc'weightsTr_off_wos .-1
+    M2T = Nc'*(2*Nn'-3I)*weightsTr_off_wos .+1
+    VarT = M2T[1] - Et1[1]^2
+
+    return (cortemp-Et1[1]^2)/VarT
+end
+
+
+"""
+    mo_avgintensity_wosinglet(detectionlimitLC::Int64, P::Array{Float64,2},Pabs::Array{Float64,2}, sspTr_off::Vector{Float64},stateTr_off::Vector{Int64}, stateAbs_off::Vector{Int64},timevec_Int64ensity::Vector{Int64}, nbstate::Int64, maxrna::Int64)
+
+return the mean track intensity, normalized to 1, without burst singlets
+"""
+function mo_avgintensity_wosinglet(rnanbvec_on::Vector{Int64}, Pabs_wos::Array{Float64,2}, weightsON_wos::Vector{Float64},timevec_intensity::StepRange{Int64,Int64})  
+    intensity_model = Vector{Float64}(undef,length(timevec_intensity))
+    for i in eachindex(timevec_intensity)
+        intensity_model[i] = (rnanbvec_on'*weightsON_wos)[1]
+        weightsON_wos =  Pabs_wos'*weightsON_wos
+    end 
+    return intensity_model./maximum(intensity_model)
 end

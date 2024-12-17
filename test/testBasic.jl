@@ -27,20 +27,20 @@ using BenchmarkTools
     timevec_on = 1:1:10
     timevec_int = 1:1:20
 
-    (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst_model, intensity_model) =  ModelOutput(model1, parameters, maxrna,detectionLimitLC, detectionLimitNS, timevec_on[end],timevec[end],timevec[end],timevec_int[end])
+    (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =  ModelOutput(model1, parameters, maxrna,detectionLimitLC, detectionLimitNS, timevec_on[end],timevec[end],timevec[end],timevec_int[end])
 
 
-    @test mnascentmrna_model ≈ 3.0337754651143656
-    @test pburst_model ≈ 0.16568033517579464
+    @test mean_nascentrna ≈ 3.0337754651143656
+    @test prob_burst ≈ 0.16568033517579464
     @test corr_interburst_model ≈ 0.10866194618122918
-    @test intensity_model[1] ≈ 1
-    @test intensity_model[20] ≈ 0.0021212008496347893/1.9075373067561898
-    @test survivalnextburst_model[1] ≈ 0.9409352782206553
-    @test survivalnextburst_model[200] ≈  0.0020411810555407066
-    @test survivaldark_model[1] ≈ 0.8346193347912076
-    @test survivaldark_model[200] ≈  0.0010301814686152551
-    @test survivalspot_model[1] ≈ 0.742997360615419
-    @test survivalspot_model[10] ≈  0.024598091184660095
+    @test intensity_burst[1] ≈ 1
+    @test intensity_burst[20] ≈ 0.0021212008496347893/1.9075373067561898
+    @test survival_nextburst[1] ≈ 0.9409352782206553
+    @test survival_nextburst[200] ≈  0.0020411810555407066
+    @test survival_interburst[1] ≈ 0.8346193347912076
+    @test survival_interburst[200] ≈  0.0010301814686152551
+    @test survival_burst[1] ≈ 0.742997360615419
+    @test survival_burst[10] ≈  0.024598091184660095
 end
 
 @testset "Test single output fcts" begin
@@ -65,7 +65,7 @@ end
     timevec_on = 1:1:10
     timevec_intensity = 1:1:20
     
-    (mnascentmrna_model, pburst_model, survivalspot_model,survivaldark_model, survivalnextburst_model, corr_interburst_model, intensity_model) =  ModelOutput(model1, parameters, maxrna,detectionLimitLC, detectionLimitNS, timevec_on[end],timevec[end],timevec[end],timevec_intensity[end])
+    (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =  ModelOutput(model1, parameters, maxrna,detectionLimitLC, detectionLimitNS, timevec_on[end],timevec[end],timevec[end],timevec_intensity[end])
 
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna, detectionLimitLC, detectionLimitNS,) 
 
@@ -76,17 +76,17 @@ end
     pburst_s = StoThyLiveCell.mo_pon(ssp,stateTr_on)
     corr_s = StoThyLiveCell.mo_interburstcorr(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
     avgint_s =StoThyLiveCell.mo_avgintensity(detectionLimitLC, P,Pabs, sspTr_off,stateAbs_on, stateTr_on,timevec_intensity, model1.nbstate, maxrna)
-    @test mnascentmrna_model ≈ mnascent_s
-    @test pburst_model ≈ pburst_s
-    @test corr_interburst_model ≈ corr_s
-    @test intensity_model[1] ≈ avgint_s[1]
-    @test intensity_model[20] ≈ avgint_s[20]
-    @test survivalnextburst_model[1] ≈ survivalnb_s[1]
-    @test survivalnextburst_model[200] ≈  survivalnb_s[200]
-    @test survivaldark_model[1] ≈  survivaloff_s[1]
-    @test survivaldark_model[200] ≈   survivaloff_s[200]
-    @test survivalspot_model[1] ≈ survivalon_s[1]
-    @test survivalspot_model[10] ≈  survivalon_s[10]
+    @test mean_nascentrna ≈ mnascent_s
+    @test prob_burst ≈ pburst_s
+    @test correlation_interburst ≈ corr_s
+    @test intensity_burst[1] ≈ avgint_s[1]
+    @test intensity_burst[20] ≈ avgint_s[20]
+    @test survival_nextburst[1] ≈ survivalnb_s[1]
+    @test survival_nextburst[200] ≈  survivalnb_s[200]
+    @test survival_interburst[1] ≈  survivaloff_s[1]
+    @test survival_interburst[200] ≈   survivaloff_s[200]
+    @test survival_burst[1] ≈ survivalon_s[1]
+    @test survival_burst[10] ≈  survivalon_s[10]
 end
 
 @testset "Test single for only on/off" begin
@@ -184,8 +184,9 @@ end
     maxrnaFC = 40
     detectionLimitLC = 1
     detectionLimitNS = 2
+    burstsinglet = :with
 
-    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS, burstsinglet)
 
     #model
     Qstate = [0    8    4    0    0    0;
@@ -242,8 +243,9 @@ end
     maxrnaFC = 40
     detectionLimitLC = 1
     detectionLimitNS = 2
+    burstsinglet = :with
 
-    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS, burstsinglet)
 
     #model
     Qstate = [0    8    4    0    0    0;
@@ -286,8 +288,9 @@ end
     maxrnaFC = maximum(datalist[1])
     detectionLimitLC = 1
     detectionLimitNS = 2
+    burstsinglet = :with
 
-    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS, burstsinglet)
 
     #model
     Qstate = [0    8    4    0    0    0;
@@ -328,8 +331,9 @@ end
     maxrnaFC = 55
     detectionLimitLC = 1
     detectionLimitNS = 2
+    burstsinglet = :with
 
-    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS)
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS, burstsinglet)
 
     #model
     Qstate = [0    8    4    0    0    0;

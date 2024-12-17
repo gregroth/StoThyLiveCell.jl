@@ -10,6 +10,7 @@ struct DataFit{DT, D} <: AbstractDataOptim
     data::D
     detectionLimitLC::Int
     detectionLimitNS::Int
+    burstsinglet::Symbol
 end
 
 struct LiveCellData <: AbstractDataGroup end
