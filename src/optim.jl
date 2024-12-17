@@ -43,9 +43,9 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
         utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs, Qrna=Qrna)
         optim_struct_wrapper = OptimStructWrapper{typeof(optim_struct.data),typeof(optim_struct.dist), typeof(optim_struct.model),typeof(err_func), typeof(utileMat)}(optim_struct.data, data_fit, optim_struct.dist, optim_struct.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
     elseif data.burstsinglet == :without
-        (nascentbin, P, ssp, stateTr, stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos, rnanbvec_on) = StoThyLiveCell.mo_basics_wosinglet(model, ones(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
+        (nascentbin, P, ssp, stateTr, stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos, rnanbvec_on, weightsPre_on_wos) = StoThyLiveCell.mo_basics_wosinglet(model, ones(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
         Qrna = zeros(model.nbstate*(maxrnaFC+1),model.nbstate*(maxrnaFC+1))
-        utileMat = (nascentbin=nascentbin, P=P, ssp=ssp, stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, totnbs=totnbs, Pwos=Pwos, stateAbs_on_wos=stateAbs_on_wos, statePre_on_wos=statePre_on_wos, weightsAbs_off_wos=weightsAbs_off_wos, sspTr_off_wos=sspTr_off_wos, weightsAbs_on=weightsAbs_on, sspPreB=sspPreB, weightsTr_on=weightsTr_on, PabsOff=PabsOff, weightsTr_on_wos=weightsTr_on_wos, weightsAbsorbed_off_wos=weightsAbsorbed_off_wos, sspwos=sspwos, weightsPre_on_and_on=weightsPre_on_and_on, Rn=Rn, NR=NR, Nc=Nc, Qn=Qn, Nn=Nn, weightsTr_off_wos=weightsTr_off_wos, Pabs_wos=Pabs_wos, weightsON_wos=weightsON_wos, rnanbvec_on=rnanbvec_on, Qrna=Qrna)
+        utileMat = (nascentbin=nascentbin, P=P, ssp=ssp, stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, totnbs=totnbs, Pwos=Pwos, stateAbs_on_wos=stateAbs_on_wos, statePre_on_wos=statePre_on_wos, weightsAbs_off_wos=weightsAbs_off_wos, sspTr_off_wos=sspTr_off_wos, weightsAbs_on=weightsAbs_on, sspPreB=sspPreB, weightsTr_on=weightsTr_on, PabsOff=PabsOff, weightsTr_on_wos=weightsTr_on_wos, weightsAbsorbed_off_wos=weightsAbsorbed_off_wos, sspwos=sspwos, weightsPre_on_and_on=weightsPre_on_and_on, Rn=Rn, NR=NR, Nc=Nc, Qn=Qn, Nn=Nn, weightsTr_off_wos=weightsTr_off_wos, Pabs_wos=Pabs_wos, weightsON_wos=weightsON_wos, rnanbvec_on=rnanbvec_on, weightsPre_on_wos=weightsPre_on_wos, Qrna=Qrna)
         optim_struct_wrapper = OptimStructWrapper{typeof(optim_struct.data),typeof(optim_struct.dist), typeof(optim_struct.model),typeof(err_func), typeof(utileMat)}(optim_struct.data, data_fit, optim_struct.dist, optim_struct.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
     end
 
@@ -375,38 +375,21 @@ end
 function (f::Survival_Burst)(dataidx::Int, optimstruct::OptimStructWrapper, singlets::Symbol)
     @unpack utileMat, data_fit = optimstruct
     @unpack weightsTr_on, stateTr_on, P = utileMat
-
-    PabsOn = P[stateTr_on,stateTr_on]'
-    survivalspot_model_full = Vector{Float64}(undef,data_fit.data[dataidx][1][end])
-    for i in 1:maximum(data_fit.data[dataidx][1][end])
-        weightsTr_on = PabsOn*weightsTr_on
-        survivalspot_model_full[i] = sum(weightsTr_on)
-    end 
-    return survivalspot_model_full[data_fit.data[dataidx][1]]./survivalspot_model_full[1]
+    survival_burst_wosinglet(P, stateTr_on, weightsTr_on,data_fit.data[dataidx][1])  
 end
 
 
 function (f::Survival_InterBurst)(dataidx::Int, optimstruct::OptimStructWrapper, singlets::Symbol)
     @unpack utileMat, data_fit = optimstruct
     @unpack PabsOff, weightsTr_on_wos = utileMat
-    survivaldark_model_full = Vector{Float64}(undef,data_fit.data[dataidx][1][end])
-    for i in 1:maximum(data_fit.data[dataidx][1][end])
-        weightsTr_on_wos = PabsOff'*weightsTr_on_wos
-        survivaldark_model_full[i] = sum(weightsTr_on_wos)
-    end 
-    return survivaldark_model_full[data_fit.data[dataidx][1]]
+    survival_interburst_wosinglet(PabsOff, weightsTr_on_wos,data_fit.data[dataidx][1])   
 end
 
 
 function (f::Survival_NextBurst)(dataidx::Int, optimstruct::OptimStructWrapper, singlets::Symbol)
     @unpack utileMat, data_fit = optimstruct
     @unpack weightsAbsorbed_off_wos, PabsOff = utileMat
-    survivalnextburst_model = Vector{Float64}(undef,data_fit.data[dataidx][1][end])
-    for i in 1:maximum(data_fit.data[dataidx][1][end])
-        weightsAbsorbed_off_wos = PabsOff'*weightsAbsorbed_off_wos
-        survivalnextburst_model[i] = sum(weightsAbsorbed_off_wos)
-    end 
-    return survivalnextburst_model
+    survival_nextburst_wosinglet(weightsAbsorbed_off_wos,PabsOff, data_fit.data[dataidx][1])  
 end
 
 
@@ -414,15 +397,13 @@ end
 function (f::Mean_Nascent)(dataidx::Int, optimstruct::OptimStructWrapper, singlets::Symbol)
     @unpack utileMat = optimstruct
     @unpack ssp, nascentbin, stateTr = utileMat
-    pB = sum(ssp[stateTr])
-    prna = ssp'nascentbin
-    return [x for x in optimstruct.data_fit.detectionLimitNS : optimstruct.maxrnaLC]'prna[optimstruct.data_fit.detectionLimitNS+1:end]./pB
+    return mean_nascentrna_wosinglet(ssp, nascentbin, stateTr, optimstruct.maxrnaLC, optimstruct.data_fit.detectionLimitNS) 
 end
 
 function (f::Prob_Burst)(dataidx::Int, optimstruct::OptimStructWrapper, singlets::Symbol)
     @unpack utileMat = optimstruct
     @unpack sspwos,weightsPre_on_and_on, stateTr_on = utileMat
-    return sum(sspwos[stateTr_on]) + sum(weightsPre_on_and_on)
+    return prob_burst_wosinglet(sspwos,weightsPre_on_and_on, stateTr_on)
 end
 
 
@@ -430,43 +411,14 @@ end
 function  (f::Correlation_InterBurst)(dataidx::Int, optimstruct::OptimStructWrapper, singlets::Symbol)
     @unpack utileMat = optimstruct
     @unpack Rn, NR, Nc, Qn, Nn, weightsTr_off_wos = utileMat
-    #correlation of the interburst durations
-    cortemp=0
-    wpre = weightsTr_off_wos
-    
-    
-    wpre2 = Rn'*wpre./sum(wpre)
-    wpre3 = NR'*wpre2/sum(wpre2)
-    ET2t = Nc'*wpre3 .-1
-
-    for t=1:15000
-        cortemp = cortemp + t*ET2t[1]*sum(Rn'*wpre)
-        wpre = Qn'*wpre
-        wpre2 = Rn'*wpre./sum(wpre)
-        wpre3 = NR'*wpre2./sum(wpre2)
-        ET2t = Nc'*wpre3 .-1
-        if sum(wpre)<1e-6
-            break
-        end
-    end
-    Et1 = Nc'weightsTr_off_wos .-1
-    M2T = Nc'*(2*Nn'-3I)*weightsTr_off_wos .+1
-    VarT = M2T[1] - Et1[1]^2
-
-    return (cortemp-Et1[1]^2)/VarT
+    correlation_interburst_wosinglet(Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, 15000) 
 end
 
 
 function (f::Intensity_Burst)(dataidx::Int, optimstruct::OptimStructWrapper,singlets::Symbol)
     @unpack utileMat, data_fit = optimstruct
-    @unpack rnanbvec_on, Pabs_wos, weightsON_wos = utileMat
-
-    intensity_model = Vector{Float64}(undef,data_fit.data[dataidx][1][end])
-    for i in 1:data_fit.data[dataidx][1][end]
-        intensity_model[i] = (rnanbvec_on'*weightsON_wos)[1]
-        weightsON_wos =  Pabs_wos'*weightsON_wos
-    end 
-    return intensity_model./maximum(intensity_model)
+    @unpack rnanbvec_on, Pabs_wos, weightsON_wos, Pwos, weightsPre_on_wos, statePre_on_wos, stateTr_on  = utileMat
+    return intensity_burst_wosinglet(rnanbvec_on, Pwos, Pabs_wos, weightsPre_on_wos, statePre_on_wos, stateTr_on, weightsON_wos,data_fit.data[dataidx][1])
 end
 
 function (f::Distribution_RNA)(dataidx::Int, optimstruct::OptimStructWrapper, singlets::Symbol)

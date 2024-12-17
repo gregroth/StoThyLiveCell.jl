@@ -408,3 +408,98 @@ end
     println(sol[1].objective)
     @test typeof(sol[2].u) <: Vector
 end
+
+
+@testset "Test 2s3r model without singlet" begin
+    #define the 2s 3r model
+    #(r12,r21,r23,r32,k1on,k2on,k3on,koff)
+    Qstate = [0    8    4    0    0    0;
+            7    0    0    4    0    0;
+            3    0    0    8    2    0;
+            0    3    6    0    0    2;
+            0    0    1    0    0    8;
+            0    0    0    1    5    0]
+    paramToRate_idx = findall(Qstate .>0)
+    paramToRate_val = Qstate[findall(Qstate .>0)]
+    model1 = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5],[9,9,9],10)
+
+    #creating an instance 
+    parameters = [0.0045506,  0.00421043,  0.001,  0.0208397,  0.000605331,  0.0315689,  0.42817,  0.637767,  9.35007,  2.4761]
+    maxrna = 15
+    detectionLimitLC = 1
+    detectionLimitNS = 2
+
+    P1 = StoModel(model1, parameters, maxrna)
+
+    timevec = 1:1:200
+    timevec_on = 1:1:10
+    timevec_int = 1:1:20
+
+    (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =  StoThyLiveCell.ModelOutput_wosinglet(model1, parameters, maxrna,detectionLimitLC, detectionLimitNS, timevec_on[end],timevec[end],timevec[end],timevec_int[end])
+
+
+    @test mean_nascentrna ≈ 3.6401850701364196
+    @test prob_burst ≈ 0.039305138190572735
+    @test correlation_interburst ≈ 0.07048666712782842
+    @test intensity_burst[1] ≈ 0.9261364173944553
+    @test intensity_burst[5] ≈ 0.20014864762599732
+    @test survival_nextburst[2] ≈ 0.9772514543254125
+    @test survival_nextburst[200] ≈  0.3281989569400399
+    @test survival_interburst[2] ≈ 0.8849072429323206
+    @test survival_interburst[200] ≈  0.11172174493227556
+    @test survival_burst[2] ≈ 0.601658802857394
+    @test survival_burst[10] ≈  0.01088478468427921
+end
+
+@testset "Test 2s3r model without singlet, basic matrices" begin
+    #define the 2s 3r model
+    #(r12,r21,r23,r32,k1on,k2on,k3on,koff)
+    Qstate = [0    8    4    0    0    0;
+            7    0    0    4    0    0;
+            3    0    0    8    2    0;
+            0    3    6    0    0    2;
+            0    0    1    0    0    8;
+            0    0    0    1    5    0]
+    paramToRate_idx = findall(Qstate .>0)
+    paramToRate_val = Qstate[findall(Qstate .>0)]
+    model1 = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5],[9,9,9],10)
+
+    #creating an instance 
+    parameters = [0.0045506,  0.00421043,  0.001,  0.0208397,  0.000605331,  0.0315689,  0.42817,  0.637767,  9.35007,  2.4761]
+    maxrna = 15
+    detectionLimitLC = 1
+    detectionLimitNS = 2
+
+    P1 = StoModel(model1, parameters, maxrna)
+
+    timevec = collect(1:1:200)
+    timevec_on = collect(1:1:10)
+    timevec_int = collect(1:1:20)
+
+    (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =  StoThyLiveCell.ModelOutput_wosinglet(model1, parameters, maxrna,detectionLimitLC, detectionLimitNS, timevec_on[end],timevec[end],timevec[end],timevec_int[end])
+
+    (nascentbin, P, ssp, stateTr, stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos, rnanbvec_on, weightsPre_on_wos) = StoThyLiveCell.mo_basics_wosinglet(model1, parameters, maxrna, detectionLimitLC, detectionLimitNS) 
+
+    StoThyLiveCell.mo_basics_wosinglet!(model1, parameters, maxrna, P,ssp,stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos) 
+
+    mean_nascentrna2 = StoThyLiveCell.mean_nascentrna_wosinglet(ssp, nascentbin, stateTr, maxrna, detectionLimitNS) 
+    survival_burst2 = StoThyLiveCell.survival_burst_wosinglet( P, stateTr_on, weightsTr_on,timevec_on) 
+    survival_interburst2 = StoThyLiveCell.survival_interburst_wosinglet(PabsOff, weightsTr_on_wos,timevec)  
+    survival_nextburst2 = StoThyLiveCell.survival_nextburst_wosinglet(weightsAbsorbed_off_wos,PabsOff, timevec)  
+    prob_burst2 = StoThyLiveCell.prob_burst_wosinglet(sspwos,weightsPre_on_and_on, stateTr_on) 
+    correlation_interburst2 = StoThyLiveCell.correlation_interburst_wosinglet(Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, 15000) 
+    intensity_burst2 = StoThyLiveCell.intensity_burst_wosinglet(rnanbvec_on, Pwos, Pabs_wos, weightsPre_on_wos, statePre_on_wos, stateTr_on, weightsON_wos,timevec_int)  
+
+
+    @test mean_nascentrna ≈ mean_nascentrna2
+    @test prob_burst ≈ prob_burst2
+    @test correlation_interburst ≈  correlation_interburst2
+    @test intensity_burst[1] ≈ intensity_burst2[1] 
+    @test intensity_burst[5] ≈ intensity_burst2[5]
+    @test survival_nextburst[2] ≈ survival_nextburst2[2]
+    @test survival_nextburst[200] ≈  survival_nextburst2[200]
+    @test survival_interburst[2] ≈ survival_interburst2[2]
+    @test survival_interburst[200] ≈  survival_interburst2[200] 
+    @test survival_burst[2] ≈ survival_burst2[2]
+    @test survival_burst[10] ≈  survival_burst2[10] 
+end
