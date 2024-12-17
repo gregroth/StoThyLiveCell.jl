@@ -192,7 +192,7 @@ function ini_optim_withoutsinglet(optim_struct::OptimStruct, datagroup::LiveCell
     return err_func
 end
 
-function ini_opti_withoutsingletm(optim_struct::OptimStruct, datagroup::FixedAndLiveCellData; kwargs...)
+function ini_optim_withoutsinglet(optim_struct::OptimStruct, datagroup::FixedAndLiveCellData; kwargs...)
     @warn "A mixture of live cell and fixed cell data is used in the error function"
     @warn " The  last parameter is interpreted as the degradation rate in the calculations of the mRNA number distribution"
     function err_func(params,optim_struct_wrapper::OptimStructWrapper)

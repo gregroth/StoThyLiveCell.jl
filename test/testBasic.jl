@@ -409,6 +409,49 @@ end
     @test typeof(sol[2].u) <: Vector
 end
 
+@testset "Test optim for mixture data without singlets" begin
+
+    datafile= load("./data_test.jld2") ;
+    data_test = datafile["data_all"];
+
+    datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(), StoThyLiveCell.Distribution_RNA(),)
+    datalist = data_test[[2,1,8]]
+    datagroup = StoThyLiveCell.FixedAndLiveCellData()
+    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LikelihoodRNA(),)
+    maxrnaLC = 10
+    maxrnaFC = 55
+    detectionLimitLC = 1
+    detectionLimitNS = 2
+    burstsinglet = :without
+
+    data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS, burstsinglet)
+
+    #model
+    Qstate = [0    8    4    0    0    0;
+    7    0    0    4    0    0;
+    3    0    0    8    2    0;
+    0    3    6    0    0    2;
+    0    0    1    0    0    8;
+    0    0    0    1    5    0]
+    paramToRate_idx = findall(Qstate .>0)
+    paramToRate_val = Qstate[findall(Qstate .>0)]
+    model = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5],[9,9,9],10)
+
+    #setting up the optimiziation
+    optimtest = StoThyLiveCell.OptimStruct{typeof(data), typeof(dist), typeof(model)}(data,dist,model)
+
+    SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0, .1),]
+
+    FRange = [(0,200),(0,7), (0,55),]
+    fixedparameters = [1.]
+    #indices of the free parameters
+    freeparametersidx = [1,2,3,4,5,6,7,8,9,11]
+
+    sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function(SRange, FRange, optimtest; NbOptim=2, fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC)
+
+    println(sol[1].objective)
+    @test typeof(sol[2].u) <: Vector
+end
 
 @testset "Test 2s3r model without singlet" begin
     #define the 2s 3r model
