@@ -85,8 +85,8 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
             bfparameters_mrna = vcat(bfparameters[1:end-1],bfparameters[end])
             mrna_distribution_model = StoThyLiveCell.mo_rna(optim_struct_wrapper.model, bfparameters_mrna, optim_struct_wrapper.maxrnaFC) 
         end
-        estimate_signal = (survival_burst = survival_burst, survival_interburst = survival_interburst, survival_nextburst = survival_nextburst, prob_burst = prob_burst, mean_nascentrna = mean_nascentrna, correlation_interburst = correlation_interburst, intensity_burst = intensity_burst, mrna_distribution = mrna_distribution_model)    
     end
+    estimate_signal = (survival_burst = survival_burst, survival_interburst = survival_interburst, survival_nextburst = survival_nextburst, prob_burst = prob_burst, mean_nascentrna = mean_nascentrna, correlation_interburst = correlation_interburst, intensity_burst = intensity_burst, mrna_distribution = mrna_distribution_model)    
     return sol, bfparameters, minval, minidx, estimate_signal
 end
 
@@ -124,7 +124,7 @@ function ini_data(optim_struct::OptimStruct, FRange; kwargs...)
         end
         push!(datafit, datatemp)
     end
-    return StoThyLiveCell.DataFit{typeof(data.datatypes),typeof(data.data)}(data.datatypes, data.datagroup, Tuple(datafit), data.detectionLimitLC, data.detectionLimitNS)
+    return StoThyLiveCell.DataFit{typeof(data.datatypes),typeof(data.data)}(data.datatypes, data.datagroup, Tuple(datafit), data.detectionLimitLC, data.detectionLimitNS, data.burstsinglet)
 
 end
 
@@ -429,7 +429,7 @@ end
 
 function  (f::Correlation_InterBurst)(dataidx::Int, optimstruct::OptimStructWrapper, singlets::Symbol)
     @unpack utileMat = optimstruct
-    @unpack Rn, NR, Nc, Qn Nn, weightsTr_off_wos = utileMat
+    @unpack Rn, NR, Nc, Qn, Nn, weightsTr_off_wos = utileMat
     #correlation of the interburst durations
     cortemp=0
     wpre = weightsTr_off_wos

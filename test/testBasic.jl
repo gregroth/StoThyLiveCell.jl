@@ -32,7 +32,7 @@ using BenchmarkTools
 
     @test mean_nascentrna ≈ 3.0337754651143656
     @test prob_burst ≈ 0.16568033517579464
-    @test corr_interburst_model ≈ 0.10866194618122918
+    @test correlation_interburst ≈ 0.10866194618122918
     @test intensity_burst[1] ≈ 1
     @test intensity_burst[20] ≈ 0.0021212008496347893/1.9075373067561898
     @test survival_nextburst[1] ≈ 0.9409352782206553
@@ -222,7 +222,7 @@ end
     utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs, Qrna=Qrna)
     
 
-    optim_struct_wrapper = StoThyLiveCell.OptimStructWrapper{typeof(optimtest.data),typeof(optimtest.dist), typeof(optimtest.model),typeof(err_func)}(optimtest.data, data_fit, optimtest.dist, optimtest.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
+    optim_struct_wrapper = StoThyLiveCell.OptimStructWrapper{typeof(optimtest.data),typeof(optimtest.dist), typeof(optimtest.model),typeof(err_func), typeof(utileMat)}(optimtest.data, data_fit, optimtest.dist, optimtest.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
 
    @btime $err_func($freeparameters,$optim_struct_wrapper )
 
