@@ -5,20 +5,29 @@ abstract type AbstractDistanceFitRNAandBurst end
 
 
 
-struct LikelihoodRNA <: AbstractDistanceFitRNA end
+struct LikelihoodRNA <: AbstractDistanceFitRNA 
+    weight::Float32
+end
 
-struct LsqSurvival <: AbstractDistanceFitBurst end
+struct LsqSurvival <: AbstractDistanceFitBurst 
+    weight::Float32
+end
 
 "weighted average of the lsq on the linear data and the log data"
 struct LsqSurvivalLogLin <: AbstractDistanceFitBurst 
     plog::Float32
+    weight::Float32
 end
 
 
-struct LsqProb <: AbstractDistanceFitBurst end
+struct LsqProb <: AbstractDistanceFitBurst 
+    weight::Float32
+end
 
 
-struct LsqNumber <: AbstractDistanceFitBurst end
+struct LsqNumber <: AbstractDistanceFitBurst 
+    weight::Float32
+end
 
 
 
