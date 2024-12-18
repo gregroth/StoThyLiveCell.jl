@@ -179,7 +179,7 @@ end
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
     datalist = data_test[[2,1,5,6,7]]
     datagroup = StoThyLiveCell.LiveCellData()
-    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
+    dist = (StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LsqNumber(1.0), StoThyLiveCell.LsqProb(1.0), StoThyLiveCell.LsqNumber(1.0),)
     maxrnaLC = 10
     maxrnaFC = 40
     detectionLimitLC = 1
@@ -238,7 +238,7 @@ end
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
     datalist = data_test[[2,1,5,6,7]]
     datagroup = StoThyLiveCell.LiveCellData()
-    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
+    dist = (StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LsqNumber(1.0), StoThyLiveCell.LsqProb(1.0), StoThyLiveCell.LsqNumber(1.0),)
     maxrnaLC = 10
     maxrnaFC = 40
     detectionLimitLC = 1
@@ -283,7 +283,7 @@ end
     datatype = (StoThyLiveCell.Distribution_RNA(),)
     datalist = data_test[[8]]
     datagroup = StoThyLiveCell.FixedCellData()
-    dist = (StoThyLiveCell.LikelihoodRNA(),)
+    dist = (StoThyLiveCell.LikelihoodRNA(1.0),)
     maxrnaLC = 10
     maxrnaFC = maximum(datalist[1])
     detectionLimitLC = 1
@@ -326,7 +326,7 @@ end
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(), StoThyLiveCell.Distribution_RNA(),)
     datalist = data_test[[2,1,8]]
     datagroup = StoThyLiveCell.FixedAndLiveCellData()
-    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LikelihoodRNA(),)
+    dist = (StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LikelihoodRNA(1.0),)
     maxrnaLC = 10
     maxrnaFC = 55
     detectionLimitLC = 1
@@ -373,7 +373,7 @@ end
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
     datalist = data_test[[2,1,5,6,7]]
     datagroup = StoThyLiveCell.LiveCellData()
-    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
+    dist = (StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LsqNumber(1.0), StoThyLiveCell.LsqProb(1.0), StoThyLiveCell.LsqNumber(1.0),)
     maxrnaLC = 10
     maxrnaFC = 40
     detectionLimitLC = 1
@@ -417,7 +417,7 @@ end
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(), StoThyLiveCell.Distribution_RNA(),)
     datalist = data_test[[2,1,8]]
     datagroup = StoThyLiveCell.FixedAndLiveCellData()
-    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LikelihoodRNA(),)
+    dist = (StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LikelihoodRNA(1.0),)
     maxrnaLC = 10
     maxrnaFC = 55
     detectionLimitLC = 1
@@ -558,7 +558,7 @@ end
     datatype = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
     datalist = data_test[[2,1,5,6,7]]
     datagroup = StoThyLiveCell.LiveCellData()
-    dist = (StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqSurvival(), StoThyLiveCell.LsqNumber(), StoThyLiveCell.LsqProb(), StoThyLiveCell.LsqNumber(),)
+    dist = (StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LsqNumber(1.0), StoThyLiveCell.LsqProb(1.0), StoThyLiveCell.LsqNumber(1.0),)
     maxrnaLC = 10
     maxrnaFC = 40
     detectionLimitLC = 1
