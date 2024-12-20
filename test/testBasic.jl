@@ -245,7 +245,7 @@ end
     maxrnaFC = 40
     detectionLimitLC = 1
     detectionLimitNS = 2
-    burstsinglet = :with
+    burstsinglet = :without
 
     data = StoThyLiveCell.DataFit{typeof(datatype),typeof(datalist)}(datatype, datagroup, datalist,detectionLimitLC, detectionLimitNS, burstsinglet)
 

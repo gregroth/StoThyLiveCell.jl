@@ -137,9 +137,9 @@ Return the rate matrix of a model instance based on the topology of the model.
 - `parameters::Vector{Float64}`: list of the all the rate parameters
 - `maxrna::Int`: maximum number of mRNA considered in the model
 """
-function StoModel_RateMat(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int)
-    Qstate = zeros(model.nbstate,model.nbstate) 
-    Q = zeros(model.nbstate*(maxrna+1),model.nbstate*(maxrna+1))
+function StoModel_RateMat(model::StandardStoModel, parameters::AbstractVector{T}, maxrna::Int) where T
+    Qstate = zeros(T, model.nbstate,model.nbstate) 
+    Q = zeros(T, model.nbstate*(maxrna+1),model.nbstate*(maxrna+1))
     for i in eachindex(model.ParamToRate_val)
         Qstate[model.ParamToRate_idx[i]] = parameters[model.ParamToRate_val[i]]
     end
