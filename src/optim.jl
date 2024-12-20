@@ -4,6 +4,7 @@ struct OptimStruct{DF,DI,M}
     data::DF
     dist::DI
     model::M
+    AutoDiff::Bool
 end
 
 function OptimStruct(data::Vector, dist::D, model::M) where {D,M}
@@ -26,10 +27,14 @@ end
 
 
 function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxrnaLC = 10, maxrnaFC = 60, freeparametersidx =[x for x in eachindex(SRange)], fixedparameters =[-1],  kwargs...)
-    @unpack data, dist, model = optim_struct
+    @unpack data, dist, model, AutoDiff = optim_struct
 
     if data.burstsinglet == :with
-        err_func = ini_optim(optim_struct, optim_struct.data.datagroup)
+        if AutoDiff
+            err_func = ini_optimAD(optim_struct, optim_struct.data.datagroup)
+        else
+            err_func = ini_optim(optim_struct, optim_struct.data.datagroup)
+        end
     elseif data.burstsinglet == :without
         err_func = ini_optim_withoutsinglet(optim_struct, optim_struct.data.datagroup)
     end
@@ -38,8 +43,10 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
 
     #allocate memory for the utiles matrices
     if data.burstsinglet == :with
-        if optim_struct.AutoDiff == true
-            dd
+        if AutoDiff
+            (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, ones(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
+            utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on,)
+            optim_struct_wrapper = OptimStructWrapper{typeof(optim_struct.data),typeof(optim_struct.dist), typeof(optim_struct.model),typeof(err_func), typeof(utileMat)}(optim_struct.data, data_fit, optim_struct.dist, optim_struct.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
         else
             (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, ones(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
             Qrna = zeros(model.nbstate*(maxrnaFC+1),model.nbstate*(maxrnaFC+1))
@@ -181,7 +188,7 @@ function ini_optim(optim_struct::OptimStruct, datagroup::FixedAndLiveCellData; k
 end
 
 function ini_optimAD(optim_struct::OptimStruct, datagroup::LiveCellData; kwargs...)
-    function err_func(params,optim_struct_wrapper::OptimStructWrapper)
+    function err_func(params::AbstractVector{T},optim_struct_wrapper::OptimStructWrapper) where T
         parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
         error = 0.  
         for i in eachindex(optim_struct_wrapper.data_fit.datatypes)
@@ -194,7 +201,7 @@ function ini_optimAD(optim_struct::OptimStruct, datagroup::LiveCellData; kwargs.
 end
 
 function ini_optimAD(optim_struct::OptimStruct, datagroup::FixedCellData; kwargs...)
-    function err_func(params,optim_struct_wrapper::OptimStructWrapper)
+    function err_func(::AbstractVector{T},optim_struct_wrapper::OptimStructWrapper) where T
         parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
         estimate_signal = optim_struct_wrapper.data_fit.datatypes[1](1,parameters, optim_struct_wrapper)
         error = optim_struct_wrapper.dist[1](estimate_signal,optim_struct_wrapper.data_fit.data[1])
@@ -206,7 +213,7 @@ end
 function ini_optimAD(optim_struct::OptimStruct, datagroup::FixedAndLiveCellData; kwargs...)
     @warn "A mixture of live cell and fixed cell data is used in the error function"
     @warn " The  last parameter is interpreted as the degradation rate in the calculations of the mRNA number distribution"
-    function err_func(params,optim_struct_wrapper::OptimStructWrapper)
+    function err_func(params::AbstractVector{T},optim_struct_wrapper::OptimStructWrapper) where T
         parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
         error = 0.  
         for i in eachindex(optim_struct_wrapper.data_fit.datatypes)

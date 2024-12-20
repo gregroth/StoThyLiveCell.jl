@@ -605,3 +605,11 @@ end
 
     @test err_func(freeparameters,optim_struct_wrapper ) >= 0
 end =#
+
+
+
+
+@kwdef struct hello
+    data::Int
+    dist=3
+end
