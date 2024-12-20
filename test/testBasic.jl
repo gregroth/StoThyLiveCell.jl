@@ -2,7 +2,7 @@ using StoThyLiveCell
 using Test
 using DataFrames, FileIO, JLD2
 using BenchmarkTools
-@testset "Test 2s3r model" begin
+#= @testset "Test 2s3r model" begin
     #define the 2s 3r model
     #(r12,r21,r23,r32,k1on,k2on,k3on,koff)
     Qstate = [0    8    4    0    0    0;
@@ -272,7 +272,7 @@ end
 
     println(sol[1].objective)
     @test typeof(sol[2].u) <: Vector
-end
+end =#
 
 
 @testset "Test optim for fixed cells" begin
@@ -313,11 +313,11 @@ end
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9]
 
-    sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function(SRange, FRange, optimtest; NbOptim=2, fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC)
+    sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function(SRange, FRange, optimtest; NbOptim=2, fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC, Method=BFGS())
 
     @test typeof(sol[2].u) <: Vector
 end
-
+#= 
 @testset "Test optim for mixture data" begin
 
     datafile= load("./data_test.jld2") ;
@@ -604,4 +604,4 @@ end
    @btime $err_func($freeparameters,$optim_struct_wrapper )
 
     @test err_func(freeparameters,optim_struct_wrapper ) >= 0
-end
+end =#

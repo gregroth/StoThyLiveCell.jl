@@ -510,7 +510,7 @@ end
 
 return mRNA distribution for model with parameters
 """
-function distribution_mrna(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64) 
+function distribution_mrna(model::StandardStoModel, parameters::AbstractVector{T}, maxrna::Int64) where T
     Q = StoModel_RateMat(model, parameters, maxrna)
     Q[:,end] = ones(model.nbstate* (maxrna+1))
     b = zeros(model.nbstate* (maxrna+1))
@@ -518,7 +518,7 @@ function distribution_mrna(model::StandardStoModel, parameters::Vector{Float64},
     ssp = Q' \ b
     ssd_rna= ssp'kron(diagm(ones(maxrna+1)), ones(model.nbstate))
     ssd_rna[ssd_rna .<=0] .= 1e-9 
-    return ssd_rna
+    return ssd_rna'
 #=     evs = eigvecs(P')
     ssp = normalizemat!(real.(evs[:,end]))
     

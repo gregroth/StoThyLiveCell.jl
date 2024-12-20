@@ -38,10 +38,14 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
 
     #allocate memory for the utiles matrices
     if data.burstsinglet == :with
-        (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, ones(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
-        Qrna = zeros(model.nbstate*(maxrnaFC+1),model.nbstate*(maxrnaFC+1))
-        utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs, Qrna=Qrna)
-        optim_struct_wrapper = OptimStructWrapper{typeof(optim_struct.data),typeof(optim_struct.dist), typeof(optim_struct.model),typeof(err_func), typeof(utileMat)}(optim_struct.data, data_fit, optim_struct.dist, optim_struct.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
+        if optim_struct.AutoDiff == true
+            dd
+        else
+            (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, ones(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
+            Qrna = zeros(model.nbstate*(maxrnaFC+1),model.nbstate*(maxrnaFC+1))
+            utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs, Qrna=Qrna)
+            optim_struct_wrapper = OptimStructWrapper{typeof(optim_struct.data),typeof(optim_struct.dist), typeof(optim_struct.model),typeof(err_func), typeof(utileMat)}(optim_struct.data, data_fit, optim_struct.dist, optim_struct.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
+        end
     elseif data.burstsinglet == :without
         (nascentbin, P, ssp, stateTr, stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos, rnanbvec_on, weightsPre_on_wos) = StoThyLiveCell.mo_basics_wosinglet(model, ones(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
         Qrna = zeros(model.nbstate*(maxrnaFC+1),model.nbstate*(maxrnaFC+1))
@@ -175,7 +179,45 @@ function ini_optim(optim_struct::OptimStruct, datagroup::FixedAndLiveCellData; k
     end 
     return err_func
 end
-  
+
+function ini_optimAD(optim_struct::OptimStruct, datagroup::LiveCellData; kwargs...)
+    function err_func(params,optim_struct_wrapper::OptimStructWrapper)
+        parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
+        error = 0.  
+        for i in eachindex(optim_struct_wrapper.data_fit.datatypes)
+            estimate_signal = optim_struct_wrapper.data_fit.datatypes[i](i, parameters, optim_struct_wrapper)
+            error = error + optim_struct_wrapper.dist[i](estimate_signal, optim_struct_wrapper.data_fit.data[i])
+        end
+        return error
+    end
+    return err_func
+end
+
+function ini_optimAD(optim_struct::OptimStruct, datagroup::FixedCellData; kwargs...)
+    function err_func(params,optim_struct_wrapper::OptimStructWrapper)
+        parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
+        estimate_signal = optim_struct_wrapper.data_fit.datatypes[1](1,parameters, optim_struct_wrapper)
+        error = optim_struct_wrapper.dist[1](estimate_signal,optim_struct_wrapper.data_fit.data[1])
+        return error
+    end
+    return err_func
+end
+
+function ini_optimAD(optim_struct::OptimStruct, datagroup::FixedAndLiveCellData; kwargs...)
+    @warn "A mixture of live cell and fixed cell data is used in the error function"
+    @warn " The  last parameter is interpreted as the degradation rate in the calculations of the mRNA number distribution"
+    function err_func(params,optim_struct_wrapper::OptimStructWrapper)
+        parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
+        error = 0.  
+        for i in eachindex(optim_struct_wrapper.data_fit.datatypes)
+            estimate_signal = optim_struct_wrapper.data_fit.datatypes[i](i, parameters, optim_struct_wrapper)
+            error = error + optim_struct_wrapper.dist[i](estimate_signal,optim_struct_wrapper.data_fit.data[i])
+        end
+        return error
+    end 
+    return err_func
+end
+
 function ini_optim_withoutsinglet(optim_struct::OptimStruct, datagroup::LiveCellData; kwargs...)
     function err_func(params,optim_struct_wrapper::OptimStructWrapper)
         parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
@@ -229,12 +271,24 @@ function (f::Survival_Burst)(dataidx::Int, optimstruct::OptimStructWrapper)
    
 end
 
+function (f::Survival_Burst)(dataidx::Int,  parameters::AbstractVector{T},optimstruct::OptimStructWrapper)
+    @unpack utileMat, data_fit,model, maxrnaLC = optimstruct
+    @unpack stateTr_on, stateAbs_on = utileMat
+
+    return survival_burst(model, parameters, maxrnaLC, stateTr_on, stateAbs_on, data_fit.data[dataidx][1]) 
+   
+end
+
 function (f::Survival_InterBurst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit = optimstruct
     @unpack weightsTr_off, PabsOff = utileMat
     return survival_interburst(PabsOff, weightsTr_off,data_fit.data[dataidx][1])
 end
 
+function (f::Survival_InterBurst)(dataidx::Int, parameters::AbstractVector{T}, optimstruct::OptimStructWrapper)
+    @unpack data_fit,model, maxrnaLC = optimstruct
+    return survival_interburst(model, parameters, maxrnaLC,data_fit.data[dataidx][1])
+end
 
 function (f::Survival_NextBurst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit = optimstruct
@@ -243,6 +297,11 @@ function (f::Survival_NextBurst)(dataidx::Int, optimstruct::OptimStructWrapper)
     return survival_nextburst(sspTr_off::Vector{Float64},PabsOff,data_fit.data[dataidx][1])
 end
 
+function (f::Survival_NextBurst)(dataidx::Int,parameters::AbstractVector{T}, optimstruct::OptimStructWrapper)
+    @unpack data_fit, model, maxrnaLC = optimstruct
+
+    return survival_nextburst(model, parameters, maxrnaLC, data_fit.data[dataidx][1])
+end
 
 function (f::Mean_Nascent)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit = optimstruct
@@ -251,6 +310,12 @@ function (f::Mean_Nascent)(dataidx::Int, optimstruct::OptimStructWrapper)
     return mean_nascentrna(ssp, optimstruct.maxrnaLC, stateTr, optimstruct.model.nbstate, data_fit.detectionLimitNS)
 end
 
+function (f::Mean_Nascent)(dataidx::Int,parameters::AbstractVector{T}, optimstruct::OptimStructWrapper)
+    @unpack utileMat, data_fit, model, maxrnaLC = optimstruct
+    @unpack stateTr = utileMat
+
+    return mean_nascentrna(model, parameters, maxrnaLC, stateTr, data_fit.detectionLimitNS)
+end
 
 
 function (f::Prob_Burst)(dataidx::Int, optimstruct::OptimStructWrapper)
@@ -258,9 +323,14 @@ function (f::Prob_Burst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack stateTr_on, ssp = utileMat
 
     return prob_burst(ssp,stateTr_on) 
-
 end
 
+function (f::Prob_Burst)(dataidx::Int, parameters::AbstractVector{T}, optimstruct::OptimStructWrapper)
+    @unpack utileMat, model, maxrnaLC = optimstruct
+    @unpack stateTr_on = utileMat
+
+    return prob_burst(model, maxrnaLC, stateTr_on) 
+end
 
 function (f::Intensity_Burst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit, model, maxrnaLC = optimstruct
@@ -269,6 +339,12 @@ function (f::Intensity_Burst)(dataidx::Int, optimstruct::OptimStructWrapper)
     return intensity_burst(data_fit.detectionLimitLC, P, Pabs, sspTr_off,stateTr_on, stateAbs_on,data_fit.data[dataidx][1], model.nbstate, maxrnaLC)
 end
 
+function (f::Intensity_Burst)(dataidx::Int,parameters::AbstractVector{T}, optimstruct::OptimStructWrapper)
+    @unpack utileMat, data_fit, model, maxrnaLC = optimstruct
+    @unpack stateTr_on, stateAbs_on = utileMat
+
+    return intensity_burst(model, parameters, data_fit.detectionLimitLC,stateTr_on, stateAbs_on, data_fit.data[dataidx][1], maxrnaLC)
+end
 
 function (f::Correlation_InterBurst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat = optimstruct
@@ -278,6 +354,12 @@ function (f::Correlation_InterBurst)(dataidx::Int, optimstruct::OptimStructWrapp
   return correlation_interburst(P, weightsTr_off,stateAbs_on, stateTr_on, 15000)
 end
 
+function (f::Correlation_InterBurst)(dataidx::Int, parameters::AbstractVector{T}, optimstruct::OptimStructWrapper)
+    @unpack utileMat, model, maxrnaLC = optimstruct
+    @unpack stateTr_on, stateAbs_on = utileMat
+
+  return correlation_interburst(model, parameters, maxrnaLC, stateAbs_on, stateTr_on, 15000)
+end
 
 
 function (f::Distribution_RNA)(dataidx::Int, optimstruct::OptimStructWrapper)
@@ -286,6 +368,10 @@ function (f::Distribution_RNA)(dataidx::Int, optimstruct::OptimStructWrapper)
     return distribution_mrna(Qrna, maxrnaFC, model.nbstate)
 end
 
+function (f::Distribution_RNA)(dataidx::Int, parameters::AbstractVector{T}, optimstruct::OptimStructWrapper) where T
+    @unpack maxrnaFC, model = optimstruct
+    return distribution_mrna(model,parameters,maxrnaFC,)
+end
 
 
 #WITHOUT burst singlets
