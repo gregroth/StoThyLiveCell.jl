@@ -608,8 +608,3 @@ end =#
 
 
 
-
-@kwdef struct hello
-    data::Int
-    dist=3
-end

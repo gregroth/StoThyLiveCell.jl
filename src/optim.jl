@@ -44,7 +44,7 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
     #allocate memory for the utiles matrices
     if data.burstsinglet == :with
         if AutoDiff
-            (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, ones(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
+            (stateTr, stateTr_on, stateAbs_on) = StoThyLiveCell.mo_basics_nonparam(model, maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
             utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on,)
             optim_struct_wrapper = OptimStructWrapper{typeof(optim_struct.data),typeof(optim_struct.dist), typeof(optim_struct.model),typeof(err_func), typeof(utileMat)}(optim_struct.data, data_fit, optim_struct.dist, optim_struct.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx,fixedparameters, utileMat, err_func)
         else
@@ -189,11 +189,15 @@ end
 
 function ini_optimAD(optim_struct::OptimStruct, datagroup::LiveCellData; kwargs...)
     function err_func(params::AbstractVector{T},optim_struct_wrapper::OptimStructWrapper) where T
+        @unpack UtileMat = optim_struct_wrapper
         parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
+        (P, ssp, weightsTr_off, PabsOff, sspTr_Off, Pabs) = StoThyLiveCell.mo_basics!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.utileMat.stateTr_on, optim_struct_wrapper.utileMat.stateAbs_on)
+        utileMat_tmp = (stateTr=UtileMat.stateTr, stateTr_on=UtileMat.stateTr_on, stateAbs_on=UtileMat.stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs)
+        optim_struct_wrapper_tmp = OptimStructWrapper{typeof(optim_struct_wrapper.data_fit),typeof(optim_struct_wrapper.dist), typeof(optim_struct_wrapper.model),typeof(optim_struct_wrapper_err_func), typeof(utileMat_tmp)}(optim_struct_wrapper.data_ref, optim_struct_wrapper.data_fit, optim_struct_wrapper.dist, optim_struct_wrapper.model, optim_struct_wrapper.SRange, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.maxrnaFC, optim_struct_wrapper.freeparametersidx, optim_struct_wrapper.fixedparameters, utileMat_tmp, optim_struct_wrapper.err_func)
         error = 0.  
-        for i in eachindex(optim_struct_wrapper.data_fit.datatypes)
-            estimate_signal = optim_struct_wrapper.data_fit.datatypes[i](i, parameters, optim_struct_wrapper)
-            error = error + optim_struct_wrapper.dist[i](estimate_signal, optim_struct_wrapper.data_fit.data[i])
+        for i in eachindex(optim_struct_wrapper_tmp.data_fit.datatypes)
+            estimate_signal = optim_struct_wrapper_tmp.data_fit.datatypes[i](i, parameters, optim_struct_wrapper_tmp)
+            error = error + optim_struct_wrapper_tmp.dist[i](estimate_signal, optim_struct_wrapper_tmp.data_fit.data[i])
         end
         return error
     end

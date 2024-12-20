@@ -79,6 +79,39 @@ function mo_basics(model::StandardStoModel, parameters::Vector{Float64}, maxrna:
     return P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off, Pabs
 end
 
+"""
+    mo_basics(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, detectionlimitLC::Int64, detectionlimitNS::Int64)
+
+return important vectors and matrices used in the analysis of the model
+"""
+function mo_basics_nonparam(model::StandardStoModel, maxrna::Int64, detectionlimitLC::Int64, detectionlimitNS::Int64) 
+    stateTr = [x for x in detectionlimitNS*model.nbstate+1 :(maxrna+1)*model.nbstate]
+    stateTr_on = [x for x in detectionlimitLC*model.nbstate+1 :(maxrna+1)*model.nbstate]
+    stateAbs_on = [x for x in 1 : detectionlimitLC*model.nbstate]
+    return stateTr, stateTr_on, stateAbs_on
+end
+
+"""
+    mo_basics!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, stateTr::Vector{Int64}, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64})
+
+change vector and matrices used in on and off time; mean nascent rna, p_on, correlation
+"""
+function mo_basics!(model::StandardStoModel, parameters::AbstractVector{T}, maxrna::Int64, stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64}) where T
+    P = StoModelAD(model, parameters, maxrna)
+#=     evs = eigvecs(P')
+    ssp = normalizemat!(real.(evs[:,end])) =#
+    Q = P-I
+    Q[:,end] = ones(T, size(Q,1))
+    b = zeros(T, size(Q,1))
+    b[end] = 1
+    ssp = Q' \ b
+    weightsAbs_off = normalizemat!(ssp[stateTr_on])
+    weightsTr_off = normalizemat!(P[stateTr_on,stateAbs_on]'*weightsAbs_off)
+    PabsOff = P[stateAbs_on,stateAbs_on]
+    sspTr_off =normalizemat!(ssp[stateAbs_on])
+    Pabs = P[stateTr_on,stateTr_on]
+    return P, ssp, weightsTr_off, PabsOff, sspTr_Off, Pabs
+end
 
 """
     ModelOutput_wosinglet(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, detectionlimitLC::Int64, detectionlimitNS::Int64,tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64)
