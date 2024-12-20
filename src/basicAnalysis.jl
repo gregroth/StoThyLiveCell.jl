@@ -3,7 +3,7 @@
 
 return the matrix normilized by its sum
 """
-function normalizemat!(A::Array{Float64,2})
+function normalizemat!(A::AbstractArray{T,2}) where T
     A .= A./sum(A)
 end
 
@@ -12,7 +12,7 @@ end
 
 return the vector normilized by its sum
 """
-function normalizemat!(A::Vector{Float64})
+function normalizemat!(A::AbstractVector{T}) where T
     A .= A./sum(A)
 end
 
@@ -400,30 +400,31 @@ function mo_basics_wosinglet!(model::StandardStoModel, parameters::Vector{Float6
     Pabs_wos .= Pwos[stateTr_on,stateTr_on]
 end
 
+
 """
-mean_nascentrna(ssp::Vector{Float64}, maxrna::Int64, stateTr::Vector{Int64}, nbstate::Int64, detectionlimitNS::Int)
+mean_nascentrna(ssp::AbstractVector{T}, maxrna::Int64, stateTr::Vector{Int64}, nbstate::Int64, detectionlimitNS::Int)
 
 return the mean number of nascent mrna
 """
-function mean_nascentrna(ssp::Vector{Float64}, maxrna::Int64, stateTr::Vector{Int64}, nbstate::Int64, detectionlimitNS::Int) 
+function mean_nascentrna(ssp::AbstractVector{T}, maxrna::Int64, stateTr::Vector{Int64}, nbstate::Int64, detectionlimitNS::Int) where T
     pB = sum(ssp[stateTr])
-    prna = ssp'kron(diagm(ones(maxrna+1)),ones(nbstate))
+    prna = ssp'kron(diagm(ones(T,maxrna+1)),ones(T,nbstate))
     return [x for x in detectionlimitNS : maxrna]'prna[detectionlimitNS+1:end]./pB
 end
 
 
 """
-    survival_burst( P::Array{Float64,2}, ssp::Vector{Float64},stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64},timevec_on::Vector{Int64}) 
+    survival_burst( P::AbstractArray{T,2}, ssp::AbstractVector{T},stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64},timevec_on::Vector{Int64}) 
     
 return the on time survival probabilities
 """
-function survival_burst( P::Array{Float64,2}, ssp::Vector{Float64},stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64},timevec_on::Vector{Int64}) 
+function survival_burst( P::AbstractArray{T,2}, ssp::AbstractVector{T},stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64},timevec_on::Vector{Int64}) where T
     weightsAbs_on = ssp[stateAbs_on]./sum(ssp[stateAbs_on])     
     weightsTr_on = weightsAbs_on' * P[stateAbs_on,stateTr_on]./sum(weightsAbs_on' * P[stateAbs_on,stateTr_on])
 
     PabsOn = P[stateTr_on,stateTr_on]
     tempdist = weightsTr_on
-    survivalspot_model_full = Vector{Float64}(undef,timevec_on[end])
+    survivalspot_model_full = Vector{T}(undef,timevec_on[end])
     for i in 1:timevec_on[end]
         tempdist = tempdist* PabsOn
         survivalspot_model_full[i] = sum(tempdist)
@@ -433,13 +434,13 @@ function survival_burst( P::Array{Float64,2}, ssp::Vector{Float64},stateTr_on::V
 end
 
 """
-survival_interburst(PabsOff::Array{Float64,2}, weightsTr_off::Vector{Float64},timevec_off::Vector{Int64}) 
+survival_interburst(PabsOff::AbstractArray{T,2}, weightsTr_off::AbstractVector{T},timevec_off::Vector{Int64}) 
 
 return the off time survival probabilities
 """
-function survival_interburst(PabsOff::Array{Float64,2}, weightsTr_off::Vector{Float64},timevec_off::Vector{Int64}) 
+function survival_interburst(PabsOff::AbstractArray{T,2}, weightsTr_off::AbstractVector{T},timevec_off::Vector{Int64}) where T
     tempdist = weightsTr_off
-    survivaldark_model_full = Vector{Float64}(undef,timevec_off[end])
+    survivaldark_model_full = Vector{T}(undef,timevec_off[end])
     for i in 1:timevec_off[end]
         tempdist = PabsOff'*tempdist
         survivaldark_model_full[i] = sum(tempdist)
@@ -449,13 +450,13 @@ end
 
 
 """
-    survival_nextburst(sspTr_off::Vector{Float64},PabsOff::Array{Float64,2}, timevec_nextburst::Vector{Int64}) 
+    survival_nextburst(sspTr_off::AbstractVector{T},PabsOff::AbstractArray{T,2}, timevec_nextburst::Vector{Int64}) 
 
 return the time to next burst survival probabilities
 """
-function survival_nextburst(sspTr_off::Vector{Float64},PabsOff::Array{Float64,2}, timevec_nextburst::Vector{Int64})  
+function survival_nextburst(sspTr_off::AbstractVector{T},PabsOff::AbstractArray{T,2}, timevec_nextburst::Vector{Int64})  where T
     tempdist = sspTr_off'
-    survivalnextburst_model = Vector{Float64}(undef,timevec_nextburst[end])
+    survivalnextburst_model = Vector{T}(undef,timevec_nextburst[end])
     for i in 1:timevec_nextburst[end]
         tempdist = tempdist* PabsOff
         survivalnextburst_model[i] = sum(tempdist)
@@ -465,28 +466,28 @@ end
 
 
 """
-prob_burst(ssp::Vector{Float64},stateTr_on::Vector{Int64})
+prob_burst(ssp::AbstractVector{T},stateTr_on::Vector{Int64})
 
 return the probability to observe a burst in steady-state
 """
-function prob_burst(ssp::Vector{Float64},stateTr_on::Vector{Int64}) 
+function prob_burst(ssp::AbstractVector{T},stateTr_on::Vector{Int64}) where T
     return sum(ssp[stateTr_on])
 end
 
 
 """
-correlation_interburst( P::Array{Float64,2}, weightsTr_off::Vector{Float64},stateAbs_on::Vector{Int64}, stateTr_on::Vector{Int64}, timehorizon::Int64
+correlation_interburst( P::AbstractArray{T,2}, weightsTr_off::AbstractVector{T},stateAbs_on::Vector{Int64}, stateTr_on::Vector{Int64}, timehorizon::Int64
 
 return the correlation between two consecutive inter-burst events
 """
-function correlation_interburst( P::Array{Float64,2}, weightsTr_off::Vector{Float64},stateAbs_on::Vector{Int64}, stateTr_on::Vector{Int64}, timehorizon::Int64) 
+function correlation_interburst( P::AbstractArray{T,2}, weightsTr_off::AbstractVector{T},stateAbs_on::Vector{Int64}, stateTr_on::Vector{Int64}, timehorizon::Int64) where T
     #correlation of the interburst durations
     Qn = P[stateAbs_on,stateAbs_on]
     Rn = P[stateAbs_on,stateTr_on]
 
     Qb = P[stateTr_on,stateTr_on]
     Rb = P[stateTr_on,stateAbs_on]
-    c = ones(length(stateAbs_on))
+    c = ones(T,length(stateAbs_on))
 
     Nn = (I - Qn)^(-1)
     Nb = (I - Qb)^(-1)
@@ -519,17 +520,17 @@ end
 
 
 """
-intensity_burst(detectionlimitLC::Int64, P::Array{Float64,2}, Pabs::Array{Float64,2}, sspTr_off::Vector{Float64},stateTr_off::Vector{Int64}, stateAbs_off::Vector{Int64},timevec_intensity::Vector{Int64}St, nbstate::Int64, maxrna::Int64) 
+intensity_burst(detectionlimitLC::Int64, P::AbstractArray{T,2}, Pabs::AbstractArray{T,2}, sspTr_off::AbstractVector{T},stateTr_off::Vector{Int64}, stateAbs_off::Vector{Int64},timevec_intensity::Vector{Int64}St, nbstate::Int64, maxrna::Int64) 
 
 return the mean track intensity, normalized to 1
 """
-function intensity_burst(detectionlimitLC::Int64, P::Array{Float64,2}, Pabs::Array{Float64,2}, sspTr_off::Vector{Float64},stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64},timevec_intensity::Vector{Int64}, nbstate::Int64, maxrna::Int64) 
+function intensity_burst(detectionlimitLC::Int64, P::AbstractArray{T,2}, Pabs::AbstractArray{T,2}, sspTr_off::AbstractVector{T},stateTr_on::Vector{Int64}, stateAbs_on::Vector{Int64},timevec_intensity::Vector{Int64}, nbstate::Int64, maxrna::Int64) where T
     weightsON = normalizemat!(P[stateAbs_on,stateTr_on]'*sspTr_off)
  
     rnanbvec_on = vcat(kron([x for x in detectionlimitLC : maxrna],ones(nbstate)))
 
     intensitytemp = weightsON
-    intensity_model = Vector{Float64}(undef,length(timevec_intensity))
+    intensity_model = Vector{T}(undef,length(timevec_intensity))
     for i in eachindex(timevec_intensity)
         intensity_model[i] = (rnanbvec_on'*intensitytemp)[1]
         intensitytemp =  Pabs'*intensitytemp
@@ -539,7 +540,7 @@ end
 
 
 """
-    mo_rna(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64)
+    mo_rna(model::StandardStoModel, parameters::AbstractVector{T}, maxrna::Int64)
 
 return mRNA distribution for model with parameters
 """
@@ -561,11 +562,11 @@ function distribution_mrna(model::StandardStoModel, parameters::AbstractVector{T
 end
 
 """
-    mo_rna(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64)
+    mo_rna(model::StandardStoModel, parameters::AbstractVector{T}, maxrna::Int64)
 
 return mRNA distribution for model with parameters
 """
-function distribution_mrna(Q::Array{Float64,2}, maxrna::Int64, nbstate::Int64) 
+function distribution_mrna(Q::AbstractArray{T,2}, maxrna::Int64, nbstate::Int64) where T
     Q[:,end] = ones(size(Q,1))
     b = zeros(size(Q,1))
     b[end] = 1
@@ -581,10 +582,9 @@ function distribution_mrna(Q::Array{Float64,2}, maxrna::Int64, nbstate::Int64)
     return ssd_rna =#
 end
 
-function distrna_basic!(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, Q::Array{Float64,2}) 
+function distrna_basic!(model::StandardStoModel, parameters::AbstractVector{T}, maxrna::Int64, Q::AbstractArray{T,2}) where T
     Q .= StoModel_RateMat(model, parameters, maxrna)
 end
-
 
 
 

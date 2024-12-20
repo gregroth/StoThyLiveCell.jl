@@ -2,6 +2,8 @@ using StoThyLiveCell
 using Test
 using DataFrames, FileIO, JLD2
 using BenchmarkTools
+using Optimization
+using OptimizationOptimJL
 #= @testset "Test 2s3r model" begin
     #define the 2s 3r model
     #(r12,r21,r23,r32,k1on,k2on,k3on,koff)
@@ -268,7 +270,7 @@ end
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9]
 
-    sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function(SRange, FRange, optimtest; NbOptim=2, fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC)
+    sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function(SRange, FRange, optimtest; NbOptim=2, fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC, Method=BFGS())
 
     println(sol[1].objective)
     @test typeof(sol[2].u) <: Vector
