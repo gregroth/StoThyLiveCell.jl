@@ -791,7 +791,6 @@ function correlation_interburst_wosinglet(Rn::AbstractArray{T,2}, NR::AbstractAr
     Et1 = Nc'weightsTr_off_wos .-1
     M2T = Nc'*(2*Nn'-3I)*weightsTr_off_wos .+1
     VarT = M2T[1] - Et1[1]^2
-
     return (cortemp-Et1[1]^2)/VarT
 end
 
