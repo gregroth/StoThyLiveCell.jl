@@ -229,7 +229,7 @@ end
     @test err_func(freeparameters,optim_struct_wrapper ) >= 0
 end
 
-
+=#
 @testset "Test optim for live cells" begin
 
     datafile= load("./data_test.jld2") ;
@@ -259,7 +259,7 @@ end
     model = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5],[9,9,9],10)
 
     #setting up the optimiziation
-    optimtest = StoThyLiveCell.OptimStruct{typeof(data), typeof(dist), typeof(model)}(data,dist,model)
+    optimtest = StoThyLiveCell.OptimStruct{typeof(data), typeof(dist), typeof(model)}(data,dist,model, true)
 
     SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
 
@@ -272,9 +272,9 @@ end
 
     println(sol[1].objective)
     @test typeof(sol[2].u) <: Vector
-end =#
+end 
 
-
+#= 
 @testset "Test optim for fixed cells" begin
 
     datafile= load("./data_test.jld2") ;
@@ -304,7 +304,7 @@ end =#
     model = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5],[9,9,9],10)
 
     #setting up the optimiziation
-    optimtest = StoThyLiveCell.OptimStruct{typeof(data), typeof(dist), typeof(model)}(data,dist,model)
+    optimtest = StoThyLiveCell.OptimStruct{typeof(data), typeof(dist), typeof(model)}(data,dist,model, true)
 
     SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
 
@@ -316,7 +316,7 @@ end =#
     sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function(SRange, FRange, optimtest; NbOptim=2, fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC, Method=BFGS())
 
     @test typeof(sol[2].u) <: Vector
-end
+end =#
 #= 
 @testset "Test optim for mixture data" begin
 

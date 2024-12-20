@@ -189,14 +189,14 @@ end
 
 function ini_optimAD(optim_struct::OptimStruct, datagroup::LiveCellData; kwargs...)
     function err_func(params::AbstractVector{T},optim_struct_wrapper::OptimStructWrapper) where T
-        @unpack UtileMat = optim_struct_wrapper
+        @unpack utileMat = optim_struct_wrapper
         parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
         (P, ssp, weightsTr_off, PabsOff, sspTr_Off, Pabs) = StoThyLiveCell.mo_basics!(optim_struct_wrapper.model, parameters, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.utileMat.stateTr_on, optim_struct_wrapper.utileMat.stateAbs_on)
-        utileMat_tmp = (stateTr=UtileMat.stateTr, stateTr_on=UtileMat.stateTr_on, stateAbs_on=UtileMat.stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs)
-        optim_struct_wrapper_tmp = OptimStructWrapper{typeof(optim_struct_wrapper.data_fit),typeof(optim_struct_wrapper.dist), typeof(optim_struct_wrapper.model),typeof(optim_struct_wrapper_err_func), typeof(utileMat_tmp)}(optim_struct_wrapper.data_ref, optim_struct_wrapper.data_fit, optim_struct_wrapper.dist, optim_struct_wrapper.model, optim_struct_wrapper.SRange, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.maxrnaFC, optim_struct_wrapper.freeparametersidx, optim_struct_wrapper.fixedparameters, utileMat_tmp, optim_struct_wrapper.err_func)
+        utileMat_tmp = (stateTr=utileMat.stateTr, stateTr_on=utileMat.stateTr_on, stateAbs_on=utileMat.stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs)
+        optim_struct_wrapper_tmp = OptimStructWrapper{typeof(optim_struct_wrapper.data_fit),typeof(optim_struct_wrapper.dist), typeof(optim_struct_wrapper.model),typeof(optim_struct_wrapper.err_func), typeof(utileMat_tmp)}(optim_struct_wrapper.data_ref, optim_struct_wrapper.data_fit, optim_struct_wrapper.dist, optim_struct_wrapper.model, optim_struct_wrapper.SRange, optim_struct_wrapper.maxrnaLC, optim_struct_wrapper.maxrnaFC, optim_struct_wrapper.freeparametersidx, optim_struct_wrapper.fixedparam, utileMat_tmp, optim_struct_wrapper.err_func)
         error = 0.  
         for i in eachindex(optim_struct_wrapper_tmp.data_fit.datatypes)
-            estimate_signal = optim_struct_wrapper_tmp.data_fit.datatypes[i](i, parameters, optim_struct_wrapper_tmp)
+            estimate_signal = optim_struct_wrapper_tmp.data_fit.datatypes[i](i, optim_struct_wrapper_tmp)
             error = error + optim_struct_wrapper_tmp.dist[i](estimate_signal, optim_struct_wrapper_tmp.data_fit.data[i])
         end
         return error
@@ -207,7 +207,7 @@ end
 function ini_optimAD(optim_struct::OptimStruct, datagroup::FixedCellData; kwargs...)
     function err_func(::AbstractVector{T},optim_struct_wrapper::OptimStructWrapper) where T
         parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
-        estimate_signal = optim_struct_wrapper.data_fit.datatypes[1](1,parameters, optim_struct_wrapper)
+        estimate_signal = optim_struct_wrapper.data_fit.datatypes[1](1, optim_struct_wrapper)
         error = optim_struct_wrapper.dist[1](estimate_signal,optim_struct_wrapper.data_fit.data[1])
         return error
     end
@@ -221,7 +221,7 @@ function ini_optimAD(optim_struct::OptimStruct, datagroup::FixedAndLiveCellData;
         parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
         error = 0.  
         for i in eachindex(optim_struct_wrapper.data_fit.datatypes)
-            estimate_signal = optim_struct_wrapper.data_fit.datatypes[i](i, parameters, optim_struct_wrapper)
+            estimate_signal = optim_struct_wrapper.data_fit.datatypes[i](i, optim_struct_wrapper)
             error = error + optim_struct_wrapper.dist[i](estimate_signal,optim_struct_wrapper.data_fit.data[i])
         end
         return error
@@ -281,25 +281,25 @@ function (f::Survival_Burst)(dataidx::Int, optimstruct::OptimStructWrapper)
     return survival_burst(P, ssp, stateTr_on, stateAbs_on, data_fit.data[dataidx][1]) 
    
 end
-
+#= 
 function (f::Survival_Burst)(dataidx::Int,  parameters::AbstractVector{T},optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit,model, maxrnaLC = optimstruct
     @unpack stateTr_on, stateAbs_on = utileMat
 
     return survival_burst(model, parameters, maxrnaLC, stateTr_on, stateAbs_on, data_fit.data[dataidx][1]) 
    
-end
+end =#
 
 function (f::Survival_InterBurst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit = optimstruct
     @unpack weightsTr_off, PabsOff = utileMat
     return survival_interburst(PabsOff, weightsTr_off,data_fit.data[dataidx][1])
 end
-
+#= 
 function (f::Survival_InterBurst)(dataidx::Int, parameters::AbstractVector{T}, optimstruct::OptimStructWrapper)
     @unpack data_fit,model, maxrnaLC = optimstruct
     return survival_interburst(model, parameters, maxrnaLC,data_fit.data[dataidx][1])
-end
+end =#
 
 function (f::Survival_NextBurst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit = optimstruct
@@ -307,12 +307,12 @@ function (f::Survival_NextBurst)(dataidx::Int, optimstruct::OptimStructWrapper)
 
     return survival_nextburst(sspTr_off::Vector{Float64},PabsOff,data_fit.data[dataidx][1])
 end
-
+#= 
 function (f::Survival_NextBurst)(dataidx::Int,parameters::AbstractVector{T}, optimstruct::OptimStructWrapper)
     @unpack data_fit, model, maxrnaLC = optimstruct
 
     return survival_nextburst(model, parameters, maxrnaLC, data_fit.data[dataidx][1])
-end
+end =#
 
 function (f::Mean_Nascent)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit = optimstruct
@@ -320,13 +320,13 @@ function (f::Mean_Nascent)(dataidx::Int, optimstruct::OptimStructWrapper)
 
     return mean_nascentrna(ssp, optimstruct.maxrnaLC, stateTr, optimstruct.model.nbstate, data_fit.detectionLimitNS)
 end
-
+#= 
 function (f::Mean_Nascent)(dataidx::Int,parameters::AbstractVector{T}, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit, model, maxrnaLC = optimstruct
     @unpack stateTr = utileMat
 
     return mean_nascentrna(model, parameters, maxrnaLC, stateTr, data_fit.detectionLimitNS)
-end
+end =#
 
 
 function (f::Prob_Burst)(dataidx::Int, optimstruct::OptimStructWrapper)
@@ -335,27 +335,27 @@ function (f::Prob_Burst)(dataidx::Int, optimstruct::OptimStructWrapper)
 
     return prob_burst(ssp,stateTr_on) 
 end
-
+#= 
 function (f::Prob_Burst)(dataidx::Int, parameters::AbstractVector{T}, optimstruct::OptimStructWrapper)
     @unpack utileMat, model, maxrnaLC = optimstruct
     @unpack stateTr_on = utileMat
 
     return prob_burst(model, maxrnaLC, stateTr_on) 
 end
-
+ =#
 function (f::Intensity_Burst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit, model, maxrnaLC = optimstruct
     @unpack stateTr_on, stateAbs_on, Pabs, P, sspTr_off = utileMat
 
     return intensity_burst(data_fit.detectionLimitLC, P, Pabs, sspTr_off,stateTr_on, stateAbs_on,data_fit.data[dataidx][1], model.nbstate, maxrnaLC)
 end
-
+#= 
 function (f::Intensity_Burst)(dataidx::Int,parameters::AbstractVector{T}, optimstruct::OptimStructWrapper)
     @unpack utileMat, data_fit, model, maxrnaLC = optimstruct
     @unpack stateTr_on, stateAbs_on = utileMat
 
     return intensity_burst(model, parameters, data_fit.detectionLimitLC,stateTr_on, stateAbs_on, data_fit.data[dataidx][1], maxrnaLC)
-end
+end =#
 
 function (f::Correlation_InterBurst)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack utileMat = optimstruct
@@ -364,13 +364,13 @@ function (f::Correlation_InterBurst)(dataidx::Int, optimstruct::OptimStructWrapp
 
   return correlation_interburst(P, weightsTr_off,stateAbs_on, stateTr_on, 15000)
 end
-
+#= 
 function (f::Correlation_InterBurst)(dataidx::Int, parameters::AbstractVector{T}, optimstruct::OptimStructWrapper)
     @unpack utileMat, model, maxrnaLC = optimstruct
     @unpack stateTr_on, stateAbs_on = utileMat
 
   return correlation_interburst(model, parameters, maxrnaLC, stateAbs_on, stateTr_on, 15000)
-end
+end =#
 
 
 function (f::Distribution_RNA)(dataidx::Int, optimstruct::OptimStructWrapper)
@@ -378,12 +378,12 @@ function (f::Distribution_RNA)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack Qrna = utileMat
     return distribution_mrna(Qrna, maxrnaFC, model.nbstate)
 end
-
+#= 
 function (f::Distribution_RNA)(dataidx::Int, parameters::AbstractVector{T}, optimstruct::OptimStructWrapper) where T
     @unpack maxrnaFC, model = optimstruct
     return distribution_mrna(model,parameters,maxrnaFC,)
 end
-
+ =#
 
 #WITHOUT burst singlets
 
