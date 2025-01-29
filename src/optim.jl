@@ -137,7 +137,7 @@ function ini_data(optim_struct::OptimStruct, FRange; kwargs...)
             llimit = findfirst(data.data[i][1] .>=FRange[i][1])
             ulimit = findlast(data.data[i][1] .<=FRange[i][2])
             datatemp = (data.data[i][1][llimit:ulimit], data.data[i][2][llimit:ulimit],) 
-            if minimum(datatemp)<=0
+            if minimum(datatemp[2])<=0
                 @warn "There are survival probabilities equal or below zero"
             end
         elseif data.datatypes[i] == StoThyLiveCell.Distribution_RNA()
