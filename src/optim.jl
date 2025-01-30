@@ -26,6 +26,20 @@ struct OptimStructWrapper{DF,DI,M,EF,UM}
 end
 
 
+"""
+    optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxrnaLC = 10, maxrnaFC = 60, freeparametersidx =[x for x in eachindex(SRange)], fixedparameters =[-1],  kwargs...)
+
+run a parameter optimization based on several runs and return
+            -   sol = solution from the optimization package
+            -   bfparameters = vector of the best fit parameters
+            -   minval = evalution of the optimized funct at best fit parameter values
+            -   minidx = index of the optimization run that return the minval
+            -   estimate_signal = namedTupled with all the observable predicted by the model at best fit parameter values
+
+important
+            -   the default optimizer method is BBO_adaptive_de_rand_1_bin_radiuslimited()
+            -   the default AD method is AutoForwardDiff()
+"""
 function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxrnaLC = 10, maxrnaFC = 60, freeparametersidx =[x for x in eachindex(SRange)], fixedparameters =[-1],  kwargs...)
     @unpack data, dist, model, AutoDiff = optim_struct
 
