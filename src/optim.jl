@@ -273,6 +273,10 @@ function ini_optim_withoutsinglet(optim_struct::OptimStruct, datagroup::LiveCell
         error = 0.  
         for i in eachindex(optim_struct_wrapper.data_fit.datatypes)
             estimate_signal = optim_struct_wrapper.data_fit.datatypes[i](i, optim_struct_wrapper, :without)
+            if minimum(estimate_signal) <0
+                println(parameters)
+                println(estimate_signal[estimate_signal.<0])
+            end
             error = error + optim_struct_wrapper.dist[i](estimate_signal, optim_struct_wrapper.data_fit.data[i])
         end
         return error
