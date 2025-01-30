@@ -48,15 +48,15 @@ function (f::LikelihoodRNA)(estimate_signal::AbstractVector{T}, ref_signal::Vect
 end
 
 function (f::LsqSurvival)(estimate_signal::AbstractVector{T}, ref_signal::Tuple{Vector,Vector}; kwargs...) where T
-    f.weight * sum((log.(estimate_signal .+ 1e-9) - log.(ref_signal[2].+ 1e-9)).^2)/length(estimate_signal)
+    f.weight * sum((log.(estimate_signal .+ 1e-6) - log.(ref_signal[2].+ 1e-6)).^2)/length(estimate_signal)
 end
 
 function (f::LsqSurvivalLogLin)(estimate_signal::AbstractVector{T}, ref_signal::Tuple{Vector,Vector}; kwargs...) where T
-    f.weight * (f.plog * sum((log.(estimate_signal .+ 1e-9) - log.(ref_signal[2].+ 1e-9)).^2) + (1-f.plog) * sum(((estimate_signal) - (ref_signal[2])).^2) )/length(estimate_signal)
+    f.weight * (f.plog * sum((log.(estimate_signal .+ 1e-6) - log.(ref_signal[2].+ 1e-6)).^2) + (1-f.plog) * sum(((estimate_signal) - (ref_signal[2])).^2) )/length(estimate_signal)
 end
 
 function (f::LsqProb)(estimate_signal_tot::T, ref_signal::Float64; kwargs...)where T
-    f.weight * (log.(estimate_signal_tot.+ 1e-9) - log.(ref_signal.+ 1e-9)).^2
+    f.weight * (log.(estimate_signal_tot.+ 1e-6) - log.(ref_signal.+ 1e-6)).^2
 end
 
 function (f::LsqNumber)(estimate_signal_tot::T, ref_signal::Float64; kwargs...) where T
