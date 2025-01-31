@@ -140,10 +140,10 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
         prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
         # Import a solver package and solve the optimization problem
         push!(sol, solve(prob, Method; maxtime = maxtime, maxiters = maxiters));
-        open("log_bestfits.txt", "a") do io
+        open("$(pathToLog)log_bestfits.txt", "a") do io
             writedlm(io, sol[end].u')
         end
-        open("log_fval.txt", "a") do io
+        open("$(pathToLog)log_fval.txt", "a") do io
             writedlm(io, sol[end].objective)    
         end
     end
