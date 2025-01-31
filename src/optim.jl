@@ -125,7 +125,7 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
 end
 
 
-function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim::Int=1, maxtime::Int=1, maxiters::Int=1 , Method=BBO_adaptive_de_rand_1_bin_radiuslimited(), ADmethod=AutoForwardDiff(), kwargs...)
+function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim::Int=1, maxtime::Int=1, maxiters::Int=1 , Method=BBO_adaptive_de_rand_1_bin_radiuslimited(), ADmethod=AutoForwardDiff(), pathToLog="", kwargs...)
     @unpack SRange, err_func = optim_struct_wrapper
 
     lbfull = [SRange[i][1] for i in eachindex(SRange)]
