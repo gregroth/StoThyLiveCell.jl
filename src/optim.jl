@@ -141,9 +141,9 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
         # Import a solver package and solve the optimization problem
         push!(sol, solve(prob, Method; maxtime = maxtime, maxiters = maxiters));
         open("log_bestfits.txt", "a") do io
-        write(io,"\n bestfit paramters \n")
             writedlm(io, sol[end].u')
-        write(io, "\n fval \n")
+        end
+        open("log_fval.txt", "a") do io
             writedlm(io, sol[end].objective)    
         end
     end
