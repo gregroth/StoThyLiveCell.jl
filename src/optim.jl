@@ -127,6 +127,7 @@ end
 
 function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim::Int=1, maxtime::Int=1, maxiters::Int=1 , Method=BBO_adaptive_de_rand_1_bin_radiuslimited(), ADmethod=AutoForwardDiff(), kwargs...)
     @unpack SRange, err_func = optim_struct_wrapper
+
     lbfull = [SRange[i][1] for i in eachindex(SRange)]
     ubfull = [SRange[i][2] for i in eachindex(SRange)]
     lb = lbfull[optim_struct_wrapper.freeparametersidx]
@@ -139,6 +140,12 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
         prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
         # Import a solver package and solve the optimization problem
         push!(sol, solve(prob, Method; maxtime = maxtime, maxiters = maxiters));
+        open("log_bestfits.txt", "a") do io
+        write(io,"\n bestfit paramters \n")
+            writedlm(io, sol[end].u')
+        write(io, "\n fval \n")
+            writedlm(io, sol[end].objective)    
+        end
     end
     return sol
 end
