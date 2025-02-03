@@ -153,7 +153,7 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
         end
     else
         for row in eachrow(initialparameters)
-            u0 = row
+            u0 = Vector(row)
             optprob = OptimizationFunction(err_func, ADmethod);
             prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
             # Import a solver package and solve the optimization problem
