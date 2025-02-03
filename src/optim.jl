@@ -125,7 +125,7 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
 end
 
 
-function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim::Int=1, maxtime::Int=1, maxiters::Int=1 , Method=BBO_adaptive_de_rand_1_bin_radiuslimited(), ADmethod=AutoForwardDiff(), pathToLog="", kwargs...)
+function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim::Int=1, maxtime::Int=1, maxiters::Int=1 , initialparameters = [],Method=BBO_adaptive_de_rand_1_bin_radiuslimited(), ADmethod=AutoForwardDiff(), pathToLog="", kwargs...)
     @unpack SRange, err_func = optim_struct_wrapper
 
     lbfull = [SRange[i][1] for i in eachindex(SRange)]
@@ -134,17 +134,33 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
     ub = ubfull[optim_struct_wrapper.freeparametersidx]
     db = ub - lb
     sol = []
-    for i = 1: NbOptim
-        u0 = lb .+ rand(length(lb)).*db
-        optprob = OptimizationFunction(err_func, ADmethod);
-        prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
-        # Import a solver package and solve the optimization problem
-        push!(sol, solve(prob, Method; maxtime = maxtime, maxiters = maxiters));
-        open("$(pathToLog)log_bestfits.txt", "a") do io
-            writedlm(io, sol[end].u')
+    if isempty(initialparameters)
+        for i = 1: NbOptim
+            u0 = lb .+ rand(length(lb)).*db
+            optprob = OptimizationFunction(err_func, ADmethod);
+            prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
+            # Import a solver package and solve the optimization problem
+            push!(sol, solve(prob, Method; maxtime = maxtime, maxiters = maxiters));
+            open("$(pathToLog)log_bestfits.txt", "a") do io
+                writedlm(io, sol[end].u')
+            end
+            open("$(pathToLog)log_fval.txt", "a") do io
+                writedlm(io, sol[end].objective)    
+            end
         end
-        open("$(pathToLog)log_fval.txt", "a") do io
-            writedlm(io, sol[end].objective)    
+    else
+        for i in eachindex(initialparameters)
+            u0 = initialparameters[i]
+            optprob = OptimizationFunction(err_func, ADmethod);
+            prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
+            # Import a solver package and solve the optimization problem
+            push!(sol, solve(prob, Method; maxtime = maxtime, maxiters = maxiters));
+            open("$(pathToLog)log_bestfits.txt", "a") do io
+                writedlm(io, sol[end].u')
+            end
+            open("$(pathToLog)log_fval.txt", "a") do io
+                writedlm(io, sol[end].objective)    
+            end
         end
     end
     return sol

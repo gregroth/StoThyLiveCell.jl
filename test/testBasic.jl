@@ -402,7 +402,7 @@ end
     model = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5],[9,9,9],10)
 
     #setting up the optimiziation
-    optimtest = StoThyLiveCell.OptimStruct{typeof(data), typeof(dist), typeof(model)}(data,dist,model,true)
+    optimtest = StoThyLiveCell.OptimStruct{typeof(data), typeof(dist), typeof(model)}(data,dist,model,false)
 
     SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
 
@@ -411,7 +411,7 @@ end
     #indices of the free parameters
     freeparametersidx = [1,2,3,4,5,6,7,8,9]
 
-    sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function(SRange, FRange, optimtest; NbOptim=2, fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC)
+    sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function(SRange, FRange, optimtest; NbOptim=2, maxtime=1, maxiters=1,fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC,Method=SAMIN())
 
     println(sol[1].objective)
     @test typeof(sol[2].u) <: Vector
