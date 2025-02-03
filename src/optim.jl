@@ -147,6 +147,9 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
             open("$(pathToLog)log_fval.txt", "a") do io
                 writedlm(io, sol[end].objective)    
             end
+            open("$(pathToLog)log_iniparam.txt", "a") do io
+                writedlm(io, u0)    
+            end
         end
     else
         for row in eachrow(initialparameters)
@@ -160,6 +163,9 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
             end
             open("$(pathToLog)log_fval.txt", "a") do io
                 writedlm(io, sol[end].objective)    
+            end
+            open("$(pathToLog)log_iniparam.txt", "a") do io
+                writedlm(io, u0)    
             end
         end
     end
