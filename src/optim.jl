@@ -148,7 +148,7 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
                 writedlm(io, sol[end].objective)    
             end
             open("$(pathToLog)log_iniparam.txt", "a") do io
-                writedlm(io, u0)    
+                writedlm(io, u0')    
             end
         end
     else
@@ -165,7 +165,7 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
                 writedlm(io, sol[end].objective)    
             end
             open("$(pathToLog)log_iniparam.txt", "a") do io
-                writedlm(io, u0)    
+                writedlm(io, u0')    
             end
         end
     end
