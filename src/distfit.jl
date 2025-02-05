@@ -29,6 +29,9 @@ struct LsqNumber <: AbstractDistanceFitBurst
     weight::Float32
 end
 
+struct LsqIntensity <: AbstractDistanceFitBurst
+    weight::Float32
+end
 
 
 function opt_dist(estimate_signal::Vector, ref_signal::Vector, dist::AbstractDistanceFitRNA; kwargs...)
@@ -63,7 +66,9 @@ function (f::LsqNumber)(estimate_signal_tot::T, ref_signal::Float64; kwargs...) 
     f.weight * (estimate_signal_tot - ref_signal)^2
 end
 
-
+function (f::LsqIntensity)(estimate_signal::AbstractVector{T}, ref_signal::Tuple{Vector,Vector}; kwargs...) where T
+    f.weight * sum((estimate_signal - ref_signal[2]).^2)/length(estimate_signal)
+end
 
 
 
