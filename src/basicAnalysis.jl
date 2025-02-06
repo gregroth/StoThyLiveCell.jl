@@ -800,7 +800,7 @@ intensity_burst_wosinglet(detectionlimitLC::Int64, P::AbstractArray{T,2},Pabs::A
 
 return the mean track intensity, normalized to 1, without burst singlets
 """
-function intensity_burst_wosinglet(rnanbvec_on::AbstractVector{T}, Pwos::AbstractArray{T,2}, Pabs_wos::AbstractArray{T,2}, weightsPre_on_wos::AbstractVector{T}, statePre_on_wos::Vector{Int64}, stateTr_on::Vector{Int64}, weightsON_wos::AbstractVector{T},timevec_intensity::Vector{Int64})   where T
+function intensity_burst_wosinglet(rnanbvec_on::Vector{Float64}, Pwos::AbstractArray{T,2}, Pabs_wos::AbstractArray{T,2}, weightsPre_on_wos::AbstractVector{T}, statePre_on_wos::Vector{Int64}, stateTr_on::Vector{Int64}, weightsON_wos::AbstractVector{T},timevec_intensity::Vector{Int64})   where T
     intensity_model = Vector{T}(undef,timevec_intensity[end])
     intensity_model[1] = (rnanbvec_on'*(weightsPre_on_wos.*sum(Pwos[statePre_on_wos,stateTr_on], dims=2))./sum((weightsPre_on_wos.*sum(Pwos[statePre_on_wos,stateTr_on], dims=2))))[1]
     for i in 2:timevec_intensity[end]
