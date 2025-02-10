@@ -299,7 +299,6 @@ function start_optim(optim_struct_wrapper::Tuple{OptimStructWrapper,OptimStructW
     if isempty(initialparameters)
         for i = 1: NbOptim
             u0 = lb .+ rand(length(lb)).*db
-            println(size(u0))
             optprob = OptimizationFunction(err_func, ADmethod);
             prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
             # Import a solver package and solve the optimization problem
