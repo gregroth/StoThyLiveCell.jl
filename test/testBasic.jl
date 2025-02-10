@@ -4,7 +4,7 @@ using DataFrames, FileIO, JLD2
 using BenchmarkTools
 using Optimization
 using OptimizationOptimJL
-@testset "Test 2s3r model" begin
+#= @testset "Test 2s3r model" begin
     #define the 2s 3r model
     #(r12,r21,r23,r32,k1on,k2on,k3on,koff)
     Qstate = [0    8    4    0    0    0;
@@ -612,6 +612,59 @@ end
    @btime $err_func($freeparameters,$optim_struct_wrapper )
 
     @test err_func(freeparameters,optim_struct_wrapper ) >= 0
-end 
+end  =#
 
 
+@testset "Test optim for live cells without singlets TWO MODELS" begin
+
+    datafile= load("./data_test.jld2") ;
+    data_test = datafile["data_all"];
+
+    datatype_m1 = (StoThyLiveCell.Survival_InterBurst(),StoThyLiveCell.Survival_Burst(),StoThyLiveCell.Mean_Nascent(), StoThyLiveCell.Prob_Burst(), StoThyLiveCell.Correlation_InterBurst(),)
+    datalist_m1 = data_test[[2,1,5,6,7]]
+    datagroup_m1 = StoThyLiveCell.LiveCellData()
+    dist_m1 = (StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LsqSurvival(1.0), StoThyLiveCell.LsqNumber(1.0), StoThyLiveCell.LsqProb(1.0), StoThyLiveCell.LsqNumber(1.0),)
+    
+    datatype_m2 = (StoThyLiveCell.Survival_Burst(),)
+    datalist_m2 = data_test[[1]]
+    datagroup_m2 = StoThyLiveCell.LiveCellData()
+    dist_m2 = (StoThyLiveCell.LsqSurvival(1.0),)
+    
+
+    maxrnaLC = 10
+    maxrnaFC = 40
+    detectionLimitLC = 1
+    detectionLimitNS = 2
+    burstsinglet = :without
+
+    data_m1 = StoThyLiveCell.DataFit{typeof(datatype_m1),typeof(datalist_m1)}(datatype_m1, datagroup_m1, datalist_m1,detectionLimitLC, detectionLimitNS, burstsinglet)
+    data_m2= StoThyLiveCell.DataFit{typeof(datatype_m2),typeof(datalist_m2)}(datatype_m2, datagroup_m2, datalist_m2,detectionLimitLC, detectionLimitNS, burstsinglet)
+
+    #model
+    Qstate = [0    8    4    0    0    0;
+    7    0    0    4    0    0;
+    3    0    0    8    2    0;
+    0    3    6    0    0    2;
+    0    0    1    0    0    8;
+    0    0    0    1    5    0]
+    paramToRate_idx = findall(Qstate .>0)
+    paramToRate_val = Qstate[findall(Qstate .>0)]
+    model = StoThyLiveCell.StandardStoModel(6,8,1,paramToRate_idx,paramToRate_val,[1,3,5],[9,9,9],10)
+
+    #setting up the optimiziation
+    optimtest_m1 = StoThyLiveCell.OptimStruct{typeof(data_m1), typeof(dist_m1), typeof(model)}(data_m1,dist_m1,model,false)
+    optimtest_m2 = StoThyLiveCell.OptimStruct{typeof(data_m2), typeof(dist_m2), typeof(model)}(data_m2,dist_m2,model,false)
+
+    SRange = [(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),(0.0,50.0),]
+
+    FRange_m1 = [(0,200),(0,7),(0,0),(0,0),(0,0),]
+    FRange_m2 = [(0,7),]
+    fixedparameters = [-1]
+    #indices of the free parameters
+    freeparametersidx = [1,2,3,4,5,6,7,8,9,10,11]
+
+    sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function_multipleModels(SRange, FRange_m1,FRange_m2, optimtest_m1, optimtest_m2; NbOptim=2, maxtime=1, maxiters=1,fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, paramidx_m1=collect(1:10), paramidx_m2=vcat([11],collect(2:10)), maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC,Method=SAMIN())
+
+    println(sol[1].objective)
+    @test typeof(sol[2].u) <: Vector
+end

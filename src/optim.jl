@@ -124,6 +124,116 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
     return sol, bfparameters, minval, minidx, estimate_signal
 end
 
+function optim_function_multipleModels(SRange, FRange_model1, FRange_model2, optim_struct_model1::OptimStruct,optim_struct_model2::OptimStruct, args...; maxrnaLC = 10, maxrnaFC = 60, freeparametersidx =[x for x in eachindex(SRange)], fixedparameters =[-1], paramidx_m1=[-1], paramidx_m2=[-1],  kwargs...)
+    @unpack AutoDiff = optim_struct_model1
+
+
+    if optim_struct_model1.data.burstsinglet == :with
+        if AutoDiff
+            err_func_m1 = ini_optimAD(optim_struct_model1, optim_struct_model1.data.datagroup)
+            err_func_m2 = ini_optimAD(optim_struct_model2, optim_struct_model2.data.datagroup)
+        else
+            err_func_m1 = ini_optim(optim_struct_model1, optim_struct_model1.data.datagroup)
+            err_func_m2 = ini_optim(optim_struct_model2, optim_struct_model2.data.datagroup)
+        end
+    elseif optim_struct_model1.data.burstsinglet == :without
+        if AutoDiff
+            err_func_m1= ini_optim_withoutsingletAD(optim_struct_model1, optim_struct_model1.data.datagroup)
+            err_func_m2= ini_optim_withoutsingletAD(optim_struct_model2, optim_struct_model2.data.datagroup)
+        else
+            err_func_m1 = ini_optim_withoutsinglet(optim_struct_model1, optim_struct_model1.data.datagroup)
+            err_func_m2 = ini_optim_withoutsinglet(optim_struct_model2, optim_struct_model2.data.datagroup)
+        end
+    end
+
+    data_fit_m1 = ini_data(optim_struct_model1, FRange_model1)
+    data_fit_m2 = ini_data(optim_struct_model2, FRange_model2)
+
+    freeparametersidx_model1 = paramidx_m1
+    fixedparameters_model1 = [-1]
+    freeparametersidx_model2 = paramidx_m2
+    fixedparameters_model2 = [-1]
+    #allocate memory for the utiles matrices
+    if optim_struct_model1.data.burstsinglet == :with
+        if AutoDiff
+            (stateTr, stateTr_on, stateAbs_on) = StoThyLiveCell.mo_basics_nonparam(optim_struct_model1.model, maxrnaLC, optim_struct_model1.data.detectionLimitLC, optim_struct_model1.data.detectionLimitNS) 
+            utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on,)
+            optim_struct_wrapper_m1 = OptimStructWrapper{typeof(optim_struct_model1.data),typeof(optim_struct_model1.dist), typeof(optim_struct_model1.model),typeof(err_func_m1), typeof(utileMat)}(optim_struct_model1.data, data_fit_m1, optim_struct_model1.dist, optim_struct_model1.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx_model1,fixedparameters_model1, utileMat, err_func_m1)
+            (stateTr, stateTr_on, stateAbs_on) = StoThyLiveCell.mo_basics_nonparam(optim_struct_model2.model, maxrnaLC, optim_struct_model2.data.detectionLimitLC, optim_struct_model2.data.detectionLimitNS) 
+            utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on,)
+            optim_struct_wrapper_m2 = OptimStructWrapper{typeof(optim_struct_model2.data),typeof(optim_struct_model2.dist), typeof(optim_struct_model2.model),typeof(err_func_m2), typeof(utileMat)}(optim_struct_model2.data, data_fit_m2, optim_struct_model2.dist, optim_struct_model2.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx_model2,fixedparameters_model2, utileMat, err_func_m2)
+        else
+            (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(optim_struct_model1.model, ones(optim_struct_model1.model.nbparameters+model.nbkini+1), maxrnaLC, optim_struct_model1.data.detectionLimitLC, optim_struct_model1.data.detectionLimitNS) 
+            Qrna = zeros(optim_struct_model1.model.nbstate*(maxrnaFC+1),optim_struct_model1.model.nbstate*(maxrnaFC+1))
+            utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs, Qrna=Qrna)
+            optim_struct_wrapper_m1 = OptimStructWrapper{typeof(optim_struct_model1.data),typeof(optim_struct_model1.dist), typeof(optim_struct_model1.model),typeof(err_func_m1), typeof(utileMat)}(optim_struct_model1.data, data_fit_m1, optim_struct_model1.dist, optim_struct_model1.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx_model1,fixedparameters_model1, utileMat, err_func_m1)
+            (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(optim_struct_model2.model, ones(optim_struct_model2.model.nbparameters+model.nbkini+1), maxrnaLC, optim_struct_model2.data.detectionLimitLC, optim_struct_model2.data.detectionLimitNS) 
+            Qrna = zeros(optim_struct_model2.model.nbstate*(maxrnaFC+1),optim_struct_model2.model.nbstate*(maxrnaFC+1))
+            utileMat = (stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, weightsTr_off=weightsTr_off, P=P, ssp=ssp, PabsOff=PabsOff, sspTr_Off=sspTr_Off, Pabs=Pabs, Qrna=Qrna)
+            optim_struct_wrapper_m2 = OptimStructWrapper{typeof(optim_struct_model2.data),typeof(optim_struct_model2.dist), typeof(optim_struct_model2.model),typeof(err_func_m2), typeof(utileMat)}(optim_struct_model2.data, data_fit_m2, optim_struct_model2.dist, optim_struct_model2.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx_model2,fixedparameters_model2, utileMat, err_func_m2)
+        end
+    elseif optim_struct_model1.data.burstsinglet == :without
+        if AutoDiff
+            (nascentbin, stateTr, stateTr_on, stateAbs_on, totnbs, stateAbs_on_wos, statePre_on_wos, rnanbvec_on) = StoThyLiveCell.mo_basics_wosinglet_nonparam(optim_struct_model1.model, maxrnaLC, optim_struct_model1.data.detectionLimitLC, optim_struct_model1.data.detectionLimitNS) 
+            utileMat = (nascentbin=nascentbin, stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, totnbs=totnbs, stateAbs_on_wos=stateAbs_on_wos, statePre_on_wos=statePre_on_wos,rnanbvec_on=rnanbvec_on)
+            optim_struct_wrapper_m1 = OptimStructWrapper{typeof(optim_struct_model1.data),typeof(optim_struct_model1.dist), typeof(optim_struct_model1.model),typeof(err_func_m1), typeof(utileMat)}(optim_struct_model1.data, data_fit_m1, optim_struct_model1.dist, optim_struct_model1.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx_model1,fixedparameters_model1, utileMat, err_func_m1)
+            (nascentbin, stateTr, stateTr_on, stateAbs_on, totnbs, stateAbs_on_wos, statePre_on_wos, rnanbvec_on) = StoThyLiveCell.mo_basics_wosinglet_nonparam(optim_struct_model2.model, maxrnaLC, optim_struct_model2.data.detectionLimitLC, optim_struct_model2.data.detectionLimitNS) 
+            utileMat = (nascentbin=nascentbin, stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, totnbs=totnbs, stateAbs_on_wos=stateAbs_on_wos, statePre_on_wos=statePre_on_wos,rnanbvec_on=rnanbvec_on)
+            optim_struct_wrapper_m2 = OptimStructWrapper{typeof(optim_struct_model2.data),typeof(optim_struct_model2.dist), typeof(optim_struct_model2.model),typeof(err_func_m2), typeof(utileMat)}(optim_struct_model2.data, data_fit_m2, optim_struct_model2.dist, optim_struct_model2.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx_model2,fixedparameters_model2, utileMat, err_func_m2)
+
+        else
+            (nascentbin, P, ssp, stateTr, stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos, rnanbvec_on, weightsPre_on_wos) = StoThyLiveCell.mo_basics_wosinglet(optim_struct_model1.model, ones(optim_struct_model1.model.nbparameters+optim_struct_model1.model.nbkini+1), maxrnaLC, optim_struct_model1.data.detectionLimitLC, optim_struct_model1.data.detectionLimitNS) 
+            Qrna = zeros(optim_struct_model1.model.nbstate*(maxrnaFC+1),optim_struct_model1.model.nbstate*(maxrnaFC+1))
+            utileMat = (nascentbin=nascentbin, P=P, ssp=ssp, stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, totnbs=totnbs, Pwos=Pwos, stateAbs_on_wos=stateAbs_on_wos, statePre_on_wos=statePre_on_wos, weightsAbs_off_wos=weightsAbs_off_wos, sspTr_off_wos=sspTr_off_wos, weightsAbs_on=weightsAbs_on, sspPreB=sspPreB, weightsTr_on=weightsTr_on, PabsOff=PabsOff, weightsTr_on_wos=weightsTr_on_wos, weightsAbsorbed_off_wos=weightsAbsorbed_off_wos, sspwos=sspwos, weightsPre_on_and_on=weightsPre_on_and_on, Rn=Rn, NR=NR, Nc=Nc, Qn=Qn, Nn=Nn, weightsTr_off_wos=weightsTr_off_wos, Pabs_wos=Pabs_wos, weightsON_wos=weightsON_wos, rnanbvec_on=rnanbvec_on, weightsPre_on_wos=weightsPre_on_wos, Qrna=Qrna)
+            optim_struct_wrapper_m1 = OptimStructWrapper{typeof(optim_struct_model1.data),typeof(optim_struct_model1.dist), typeof(optim_struct_model1.model),typeof(err_func_m1), typeof(utileMat)}(optim_struct_model1.data, data_fit_m1, optim_struct_model1.dist, optim_struct_model1.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx_model1,fixedparameters_model1, utileMat, err_func_m1)
+            (nascentbin, P, ssp, stateTr, stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos, rnanbvec_on, weightsPre_on_wos) = StoThyLiveCell.mo_basics_wosinglet(optim_struct_model2.model, ones(optim_struct_model2.model.nbparameters+optim_struct_model2.model.nbkini+1), maxrnaLC, optim_struct_model2.data.detectionLimitLC, optim_struct_model2.data.detectionLimitNS) 
+            Qrna = zeros(optim_struct_model2.model.nbstate*(maxrnaFC+1),optim_struct_model2.model.nbstate*(maxrnaFC+1))
+            utileMat = (nascentbin=nascentbin, P=P, ssp=ssp, stateTr=stateTr, stateTr_on=stateTr_on, stateAbs_on=stateAbs_on, totnbs=totnbs, Pwos=Pwos, stateAbs_on_wos=stateAbs_on_wos, statePre_on_wos=statePre_on_wos, weightsAbs_off_wos=weightsAbs_off_wos, sspTr_off_wos=sspTr_off_wos, weightsAbs_on=weightsAbs_on, sspPreB=sspPreB, weightsTr_on=weightsTr_on, PabsOff=PabsOff, weightsTr_on_wos=weightsTr_on_wos, weightsAbsorbed_off_wos=weightsAbsorbed_off_wos, sspwos=sspwos, weightsPre_on_and_on=weightsPre_on_and_on, Rn=Rn, NR=NR, Nc=Nc, Qn=Qn, Nn=Nn, weightsTr_off_wos=weightsTr_off_wos, Pabs_wos=Pabs_wos, weightsON_wos=weightsON_wos, rnanbvec_on=rnanbvec_on, weightsPre_on_wos=weightsPre_on_wos, Qrna=Qrna)
+            optim_struct_wrapper_m2 = OptimStructWrapper{typeof(optim_struct_model2.data),typeof(optim_struct_model2.dist), typeof(optim_struct_model2.model),typeof(err_func_m2), typeof(utileMat)}(optim_struct_model2.data, data_fit_m2, optim_struct_model2.dist, optim_struct_model2.model, SRange, maxrnaLC, maxrnaFC, freeparametersidx_model2,fixedparameters_model2, utileMat, err_func_m2)
+        end
+    end
+    #run the optimization
+    sol = start_optim((optim_struct_wrapper_m1,optim_struct_wrapper_m2,), args...; kwargs...)
+
+    #bestfit parameters
+    fvals = [sol[i].objective for i in eachindex(sol)] #collect all the optimization objective fct values
+    minval, minidx = findmin(fvals)
+    bfparameters= utiles.mergeparameter_base(fixedparameters, sol[minidx].u, freeparametersidx)
+    bfparameters_m1 = bfparameters[paramidx_m1]
+    #bestfit signal
+    if optim_struct_model1.data.burstsinglet == :with
+        if optim_struct_model1.data.datagroup == LiveCellData()
+            (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper_m1.model, bfparameters_m1, maxrnaLC, optim_struct_wrapper_m1.data_fit.detectionLimitLC, optim_struct_wrapper_m1.data_fit.detectionLimitNS, 10,200,200,10) 
+            bfparameters_mrna = vcat(bfparameters_m1[1:end-1],.01)
+            mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper_m1.model, bfparameters_mrna, optim_struct_wrapper_m1.maxrnaFC) 
+        elseif optim_struct_model1.data.datagroup == FixedCellData()
+            bfparameters_lc = vcat(bfparameters_m1[1:end-1],1.)
+            (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper_m1.model,bfparameters_lc, maxrnaLC, optim_struct_wrapper_m1.data_fit.detectionLimitLC, optim_struct_wrapper_m1.data_fit.detectionLimitNS, 10,200,200,10) 
+            mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper_m1.model, bfparameters, optim_struct_wrapper_m1.maxrnaFC) 
+        elseif optim_struct_model1.data.datagroup == FixedAndLiveCellData()
+            (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper_m1.model, bfparameters_m1[1:end-1], maxrnaLC, optim_struct_wrapper_m1.data_fit.detectionLimitLC, optim_struct_wrapper_m1.data_fit.detectionLimitNS, 10,200,200,10) 
+            bfparameters_mrna = vcat(bfparameters_m1[1:end-1],bfparameters_m1[end])
+            mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper_m1.model, bfparameters_mrna, optim_struct_wrapper_m1.maxrnaFC) 
+        end
+    elseif optim_struct_model1.data.burstsinglet == :without
+        if optim_struct_model1.data.datagroup == LiveCellData()
+            (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput_wosinglet(optim_struct_wrapper_m1.model, bfparameters_m1, maxrnaLC, optim_struct_wrapper_m1.data_fit.detectionLimitLC, optim_struct_wrapper_m1.data_fit.detectionLimitNS, 10,200,200,10) 
+            bfparameters_mrna = vcat(bfparameters[1:end-1],.01)
+            mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper_m1.model, bfparameters_mrna, optim_struct_wrapper_m1.maxrnaFC) 
+        elseif optim_struct_model1.data.datagroup == FixedCellData()
+            bfparameters_lc = vcat(bfparameters[1:end-1],1.)
+            (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper_m1.model,bfparameters_lc, maxrnaLC, optim_struct_wrapper_m1.data_fit.detectionLimitLC, optim_struct_wrapper_m1.data_fit.detectionLimitNS, 10,200,200,10) 
+            mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper_m1.model, bfparameters, optim_struct_wrapper_m1.maxrnaFC) 
+        elseif optim_struct_model1.data.datagroup == FixedAndLiveCellData()
+            (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput_wosinglet(optim_struct_wrapper_m1.model, bfparameters_m1[1:end-1], maxrnaLC, optim_struct_wrapper_m1data_fit.detectionLimitLC, optim_struct_wrapper_m1.data_fit.detectionLimitNS, 10,200,200,10) 
+            bfparameters_mrna = vcat(bfparameters_m1[1:end-1],bfparameters_m1[end])
+            mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper_m1.model, bfparameters_mrna, optim_struct_wrapper_m1.maxrnaFC) 
+        end
+    end
+    estimate_signal = (survival_burst = survival_burst, survival_interburst = survival_interburst, survival_nextburst = survival_nextburst, prob_burst = prob_burst, mean_nascentrna = mean_nascentrna, correlation_interburst = correlation_interburst, intensity_burst = intensity_burst, mrna_distribution = mrna_distribution_model)    
+    return sol, bfparameters, minval, minidx, estimate_signal
+end
+
 
 function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim::Int=1, maxtime::Int=1, maxiters::Int=1 , initialparameters = [],Method=BBO_adaptive_de_rand_1_bin_radiuslimited(), ADmethod=AutoForwardDiff(), pathToLog="", kwargs...)
     @unpack SRange, err_func = optim_struct_wrapper
@@ -171,6 +281,60 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
     end
     return sol
 end
+
+
+function start_optim(optim_struct_wrapper::Tuple{OptimStructWrapper,OptimStructWrapper}, args...; NbOptim::Int=1, maxtime::Int=1, maxiters::Int=1 , initialparameters = [],Method=BBO_adaptive_de_rand_1_bin_radiuslimited(), ADmethod=AutoForwardDiff(), pathToLog="", kwargs...)
+    @unpack SRange = optim_struct_wrapper[1]
+
+    function err_func(params,optim_struct_wrapper::Tuple{OptimStructWrapper,OptimStructWrapper})
+        return optim_struct_wrapper[1].err_func(params[optim_struct_wrapper[1].freeparametersidx], optim_struct_wrapper[1]) + optim_struct_wrapper[2].err_func(params[optim_struct_wrapper[2].freeparametersidx], optim_struct_wrapper[2])
+    end
+
+    lbfull = [SRange[i][1] for i in eachindex(SRange)]
+    ubfull = [SRange[i][2] for i in eachindex(SRange)]
+    lb = lbfull[union(optim_struct_wrapper[1].freeparametersidx,optim_struct_wrapper[2].freeparametersidx)]
+    ub = ubfull[union(optim_struct_wrapper[1].freeparametersidx,optim_struct_wrapper[2].freeparametersidx)]
+    db = ub - lb
+    sol = []
+    if isempty(initialparameters)
+        for i = 1: NbOptim
+            u0 = lb .+ rand(length(lb)).*db
+            println(size(u0))
+            optprob = OptimizationFunction(err_func, ADmethod);
+            prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
+            # Import a solver package and solve the optimization problem
+            push!(sol, solve(prob, Method; maxtime = maxtime, maxiters = maxiters));
+            open("$(pathToLog)log_bestfits.txt", "a") do io
+                writedlm(io, sol[end].u')
+            end
+            open("$(pathToLog)log_fval.txt", "a") do io
+                writedlm(io, sol[end].objective)    
+            end
+            open("$(pathToLog)log_iniparam.txt", "a") do io
+                writedlm(io, u0')    
+            end
+        end
+    else
+        for row in eachrow(initialparameters)
+            u0 = Vector(row)
+            optprob = OptimizationFunction(err_func, ADmethod);
+            prob = OptimizationProblem(optprob, u0, optim_struct_wrapper, lb = lb, ub = ub)
+            # Import a solver package and solve the optimization problem
+            push!(sol, solve(prob, Method; maxtime = maxtime, maxiters = maxiters));
+            open("$(pathToLog)log_bestfits.txt", "a") do io
+                writedlm(io, sol[end].u')
+            end
+            open("$(pathToLog)log_fval.txt", "a") do io
+                writedlm(io, sol[end].objective)    
+            end
+            open("$(pathToLog)log_iniparam.txt", "a") do io
+                writedlm(io, u0')    
+            end
+        end
+    end
+    return sol
+end
+
 
 function ini_data(optim_struct::OptimStruct, FRange; kwargs...)
     @unpack data = optim_struct
@@ -364,6 +528,8 @@ function ini_optim_withoutsingletAD(optim_struct::OptimStruct, datagroup::FixedA
     end 
     return err_func
 end
+
+
 
 function err_func_basic(params,optim_struct_wrapper::OptimStructWrapper)
     return 0
