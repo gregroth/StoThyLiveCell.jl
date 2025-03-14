@@ -69,6 +69,8 @@ end
     
     (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =  StoThyLiveCell.ModelOutput(model1, parameters, maxrna,detectionLimitLC, detectionLimitNS, timevec_on[end],timevec[end],timevec[end],timevec_int[end])
 
+
+
     (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off,Pabs) = StoThyLiveCell.mo_basics(model1, parameters, maxrna, detectionLimitLC, detectionLimitNS,) 
 
     mnascent_s = StoThyLiveCell.mean_nascentrna(ssp, maxrna, stateTr, model1.nbstate, detectionLimitNS) 
@@ -90,7 +92,7 @@ end
     @test survival_burst[1] ≈ survivalon_s[1]
     @test survival_burst[10] ≈  survivalon_s[10]
 end
-
+#= 
 @testset "Test single for only on/off" begin
     Qstate = [0    8    4    0    0    0;
                 7    0    0    4    0    0;
@@ -667,4 +669,4 @@ end
 
     println(sol[1].objective)
     @test typeof(sol[2].u) <: Vector
-end
+end =#

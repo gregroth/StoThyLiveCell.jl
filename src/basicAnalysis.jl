@@ -53,6 +53,25 @@ function ModelOutput(model::StandardStoModel, parameters::Vector{Float64}, maxrn
 end
 
 
+function ModelOutputTest(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, detectionlimitLC::Int64, detectionlimitNS::Int64, tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64) 
+    timevec_on = collect(1:1:tmaxon)
+    timevec_off = collect(1:1:tmaxoff)
+    timevec_nextburst = collect(1:1:tmaxnextburst)
+    timevec_intensity = collect(1:1:tmaxintensity)
+
+    (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_off, Pabs) = mo_basics(model, parameters, maxrna, detectionlimitLC, detectionlimitNS) 
+   
+    mean_nascentrna = StoThyLiveCell.mean_nascentrna(ssp, maxrna, stateTr, model.nbstate, detectionlimitNS) 
+    survival_burst = StoThyLiveCell.survival_burst(P, ssp,stateTr_on, stateAbs_on,timevec_on) 
+    survival_interburst = StoThyLiveCell.survival_interburst(PabsOff, weightsTr_off, timevec_off)  
+    survival_nextburst = StoThyLiveCell.survival_nextburst(sspTr_off,PabsOff, timevec_nextburst)  
+    prob_burst = StoThyLiveCell.prob_burst(ssp,stateTr_on) 
+    correlation_interburst = StoThyLiveCell.correlation_interburstTest(P, weightsTr_off,stateAbs_on, stateTr_on, 15000) 
+    intensity_burst = StoThyLiveCell.intensity_burst(detectionlimitLC, P, Pabs, sspTr_off, stateTr_on, stateAbs_on,timevec_intensity, model.nbstate, maxrna)  
+
+    return  survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst
+end
+
 """
     mo_basics(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, detectionlimitLC::Int64, detectionlimitNS::Int64)
 
@@ -622,6 +641,39 @@ function correlation_interburst( P::AbstractArray{T,2}, weightsTr_off::AbstractV
     return (cortemp-Et1[1]^2)/VarT
 end
 
+function correlation_interburstTest( P::AbstractArray{T,2}, weightsTr_off::AbstractVector{T},stateAbs_on::Vector{Int64}, stateTr_on::Vector{Int64}, timehorizon::Int64) where T
+    #correlation of the interburst durations
+    PNN = P[stateAbs_on,stateAbs_on]
+    PNB = P[stateAbs_on,stateTr_on]
+
+    PBB = P[stateTr_on,stateTr_on]
+    PBN = P[stateTr_on,stateAbs_on]
+    c = ones(T,length(stateAbs_on))
+
+    NN = (I - PNN)^(-1)
+    NB = (I - PBB)^(-1)
+
+    Nc = NN*c
+    
+    cortemp=0
+    pivec = weightsTr_off'
+    M = PNB*NB*PBN*NN*c
+    corvec = M
+    for t=2:timehorizon
+        M = PNN*M
+        corvec= corvec + t*M
+        if sum(M)<1e-9
+            break
+        end
+    end
+    #cortemp = sum(pivec .* M)
+    cortemp = pivec*corvec
+    Et1 = Nc'weightsTr_off 
+    M2T = Nc'*(2*NN'-I)*weightsTr_off
+    VarT = M2T[1] - Et1[1]^2
+
+    return (cortemp-Et1[1]^2)/VarT
+end
 
 """
 intensity_burst(detectionlimitLC::Int64, P::AbstractArray{T,2}, Pabs::AbstractArray{T,2}, sspTr_off::AbstractVector{T},stateTr_off::Vector{Int64}, stateAbs_off::Vector{Int64},timevec_intensity::Vector{Int64}St, nbstate::Int64, maxrna::Int64) 
