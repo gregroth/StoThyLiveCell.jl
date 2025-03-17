@@ -168,6 +168,24 @@ function ModelOutput_wosinglet(model::StandardStoModel, parameters::Vector{Float
 end
 
 
+function ModelOutput_wosingletTest(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, detectionLimitLC::Int64, detectionLimitNS::Int64, tmaxon::Int64,tmaxoff::Int64,tmaxnextburst::Int64,tmaxintensity::Int64) 
+    timevec_on = collect(1:1:tmaxon)
+    timevec_off = collect(1:1:tmaxoff)
+    timevec_nextburst = collect(1:1:tmaxnextburst)
+    timevec_intensity = collect(1:1:tmaxintensity)
+
+    (nascentbin, P, ssp, stateTr, stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos, rnanbvec_on, weightsPre_on_wos) = mo_basics_wosinglet(model, parameters, maxrna, detectionLimitLC, detectionLimitNS) 
+   
+    mean_nascentrna = mean_nascentrna_wosinglet(ssp, nascentbin, stateTr, maxrna, detectionLimitNS) 
+    survival_burst = survival_burst_wosinglet( P, stateTr_on, weightsTr_on,timevec_on) 
+    survival_interburst = survival_interburst_wosinglet(PabsOff, weightsTr_on_wos,timevec_off)  
+    survival_nextburst = survival_nextburst_wosinglet(weightsAbsorbed_off_wos,PabsOff, timevec_nextburst)  
+    prob_burst = prob_burst_wosinglet(sspwos,weightsPre_on_and_on, stateTr_on) 
+    correlation_interburst = correlation_interburstTest_wosinglet(Pwos, stateAbs_on_wos, stateTr_on, weightsTr_off_wos, 15000) 
+    intensity_burst = intensity_burst_wosinglet(rnanbvec_on, Pwos, Pabs_wos, weightsPre_on_wos, statePre_on_wos, stateTr_on, weightsON_wos,timevec_intensity)  
+
+    return  survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst
+end
 
 """
     mo_basics_wosinglet(model::StandardStoModel, parameters::Vector{Float64}, maxrna::Int64, detectionlimitLC::Int64, detectionlimitNS::Int64)
@@ -846,6 +864,39 @@ function correlation_interburst_wosinglet(Rn::AbstractArray{T,2}, NR::AbstractAr
     return (cortemp-Et1[1]^2)/VarT
 end
 
+function correlation_interburstTest_wosinglet( Pwos::AbstractArray{T,2},stateAbs_on_wos::Vector{Int64},stateTr_on_wos::Vector{Int64}, weightsTr_off_wos::AbstractVector{T}, timehorizon::Int64) where T
+    #correlation of the interburst durations
+    PNN = Pwos[stateAbs_on_wos,stateAbs_on_wos]
+    PNB = Pwos[stateAbs_on_wos,stateTr_on_wos]
+
+    PBB = Pwos[stateTr_on_wos,stateTr_on_wos]
+    PBN = Pwos[stateTr_on_wos,stateAbs_on_wos]
+    c = ones(T,length(stateAbs_on_wos))
+
+    NN = (I - PNN)^(-1)
+    NB = (I - PBB)^(-1)
+
+    Nc = NN*c
+    
+    cortemp=0
+    pivec = weightsTr_off_wos'
+    M = PNB*NB*PBN*NN*c
+    corvec = M
+    for t=2:timehorizon
+        M = PNN*M
+        corvec= corvec + t*M
+        if sum(M)<1e-9
+            break
+        end
+    end
+    #cortemp = sum(pivec .* M)
+    cortemp = pivec*corvec
+    Et1 = Nc'weightsTr_off_wos
+    M2T = Nc'*(2*NN'-I)*weightsTr_off_wos
+    VarT = M2T[1] + 2*Et1[1] +1 - (Et1[1]+1)^2
+
+    return (cortemp-Et1[1]^2)/VarT
+end
 
 """
 intensity_burst_wosinglet(detectionlimitLC::Int64, P::AbstractArray{T,2},Pabs::AbstractArray{T,2}, sspTr_off::AbstractVector{T},stateTr_off::Vector{Int64}, stateAbs_off::Vector{Int64},timevec_Int64ensity::Vector{Int64}, nbstate::Int64, maxrna::Int64)

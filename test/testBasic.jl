@@ -92,7 +92,7 @@ end
     @test survival_burst[1] ≈ survivalon_s[1]
     @test survival_burst[10] ≈  survivalon_s[10]
 end
-#= 
+
 @testset "Test single for only on/off" begin
     Qstate = [0    8    4    0    0    0;
                 7    0    0    4    0    0;
@@ -531,6 +531,7 @@ end
 
     (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =  StoThyLiveCell.ModelOutput_wosinglet(model1, parameters, maxrna,detectionLimitLC, detectionLimitNS, timevec_on[end],timevec[end],timevec[end],timevec_int[end])
 
+
     (nascentbin, P, ssp, stateTr, stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos, rnanbvec_on, weightsPre_on_wos) = StoThyLiveCell.mo_basics_wosinglet(model1, parameters, maxrna, detectionLimitLC, detectionLimitNS) 
 
     StoThyLiveCell.mo_basics_wosinglet!(model1, parameters, maxrna, P,ssp,stateTr_on, stateAbs_on, totnbs, Pwos, stateAbs_on_wos, statePre_on_wos, weightsAbs_off_wos, sspTr_off_wos, weightsAbs_on, sspPreB, weightsTr_on, PabsOff, weightsTr_on_wos, weightsAbsorbed_off_wos, sspwos, weightsPre_on_and_on, Rn, NR, Nc, Qn, Nn, weightsTr_off_wos, Pabs_wos, weightsON_wos) 
@@ -555,6 +556,9 @@ end
     @test survival_interburst[200] ≈  survival_interburst2[200] 
     @test survival_burst[2] ≈ survival_burst2[2]
     @test survival_burst[10] ≈  survival_burst2[10] 
+
+    @test correlation_interburst  ≈  correlation_interburst_test 
+
 end
 
 
@@ -669,4 +673,4 @@ end
 
     println(sol[1].objective)
     @test typeof(sol[2].u) <: Vector
-end =#
+end
