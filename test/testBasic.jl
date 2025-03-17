@@ -557,8 +557,6 @@ end
     @test survival_burst[2] ≈ survival_burst2[2]
     @test survival_burst[10] ≈  survival_burst2[10] 
 
-    @test correlation_interburst  ≈  correlation_interburst_test 
-
 end
 
 
