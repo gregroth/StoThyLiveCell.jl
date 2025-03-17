@@ -893,7 +893,7 @@ function correlation_interburstTest_wosinglet( Pwos::AbstractArray{T,2},stateAbs
     cortemp = pivec*corvec
     Et1 = Nc'weightsTr_off_wos
     M2T = Nc'*(2*NN'-I)*weightsTr_off_wos
-    VarT = M2T[1] + 2*Et1[1] +1 - (Et1[1]+1)^2
+    VarT = M2T[1] - (Et1[1])^2
 
     return (cortemp-Et1[1]^2)/VarT
 end
