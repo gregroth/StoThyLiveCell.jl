@@ -646,12 +646,6 @@ function (f::Distribution_RNA)(dataidx::Int, optimstruct::OptimStructWrapper)
     return distribution_mrna(Qrna, maxrnaFC, model.nbstate)
 end
 
-function (f::ConvolutedDistribution_RNA)(dataidx::Int, optimstruct::OptimStructWrapper)
-    @unpack utileMat, maxrnaFC, model = optimstruct
-    @unpack Qrna = utileMat
-    return distribution_mrna(Qrna, Int(maxrnaFC/2), model.nbstate)
-end
-
 #= 
 function (f::Distribution_RNA)(dataidx::Int, parameters::AbstractVector{T}, optimstruct::OptimStructWrapper) where T
     @unpack maxrnaFC, model = optimstruct
