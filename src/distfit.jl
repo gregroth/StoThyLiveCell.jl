@@ -8,6 +8,14 @@ abstract type AbstractDistanceFitRNAandBurst end
 struct LikelihoodRNA <: AbstractDistanceFitRNA 
     weight::Float32
 end
+struct LiikelihoodConvolutedRNA <: AbstractDistanceFitRNA 
+    weight::Float32
+end
+
+struct LiikelihoodConvolutedConditionalRNA <: AbstractDistanceFitRNA 
+    weight::Float32
+    condition::Int64
+end
 
 struct LsqSurvival <: AbstractDistanceFitBurst 
     weight::Float32
@@ -48,6 +56,33 @@ function (f::LikelihoodRNA)(estimate_signal::AbstractVector{T}, ref_signal::Vect
     estimate_signal_ = @. max(estimate_signal, 0)
     ind = @. Int(floor(ref_signal) + 1) # because the index is from 0 
     -sum(log.(estimate_signal_[ind] .+ 1e-6))*f.weight # add a small quantity to avoid log(0)
+end
+
+function (f::LikelihoodConvolutedRNA)(estimate_signal::AbstractVector{T}, ref_signal::Vector; kwargs...) where T
+    estimate_signal_ = @. max(estimate_signal, 0)
+     #convolution of two independend distributions
+     conv_result = zeros(Float64, 2*length(estimate_signal_) - 1)
+     for i in eachindex(estimate_signal_)
+         for j in eachindex(estimate_signal_)
+             conv_result[i + j - 1] += estimate_signal_[i] * estimate_signal_[j]
+         end
+     end
+    ind = @. Int(floor(ref_signal) + 1) # because the index is from 0 
+    -sum(log.(conv_result[ind] .+ 1e-6))*f.weight # add a small quantity to avoid log(0)
+end
+
+function (f::LikelihoodConvolutedConditionalRNA)(estimate_signal::AbstractVector{T}, ref_signal::Vector; kwargs...) where T
+     estimate_signal_ = @. max(estimate_signal, 0)
+     #convolution of two independend distributions
+     conv_result = zeros(Float64, 2*length(estimate_signal_) - 1)
+     for i in eachindex(estimate_signal_)
+         for j in eachindex(estimate_signal_)
+             conv_result[i + j - 1] += estimate_signal_[i] * estimate_signal_[j]
+         end
+     end
+    condDist = conv_result[f.condition:end]./sum(conv_result[f.condition:end])
+    ind = @. Int(floor(ref_signal) + 1) # because the index is from 0 
+    -sum(log.(conv_result[ind] .+ 1e-6))*f.weight # add a small quantity to avoid log(0)
 end
 
 function (f::LsqSurvival)(estimate_signal::AbstractVector{T}, ref_signal::Tuple{Vector,Vector}; kwargs...) where T
