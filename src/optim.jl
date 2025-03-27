@@ -339,7 +339,7 @@ function ini_data(optim_struct::OptimStruct, FRange; kwargs...)
     @unpack data = optim_struct
     datafit = []
     for i in eachindex(FRange)
-        if (FRange[i][2]>0) & !(data.datatypes[i] == StoThyLiveCell.Distribution_RNA()) & !(data.datatypes[i] == StoThyLiveCell.ConvoolutedDistribution_RNA())
+        if (FRange[i][2]>0) & !(data.datatypes[i] == StoThyLiveCell.Distribution_RNA()) & !(data.datatypes[i] == StoThyLiveCell.ConvolutedDistribution_RNA())
             llimit = findfirst(data.data[i][1] .>=FRange[i][1])
             ulimit = findlast(data.data[i][1] .<=FRange[i][2])
             datatemp = (data.data[i][1][llimit:ulimit], data.data[i][2][llimit:ulimit],) 
