@@ -50,4 +50,7 @@ struct Distribution_RNA <: AbstractData
 
 end
 
+struct ConvolutedDistribution_RNA <: AbstractData
+
+end
 
