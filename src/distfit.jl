@@ -82,7 +82,7 @@ function (f::LikelihoodConvolutedConditionalRNA)(estimate_signal::AbstractVector
      end
     condDist = conv_result[f.condition+1:end]./sum(conv_result[f.condition+1:end]) # +1 is because the first index is 0
     ind = @. Int(floor(ref_signal) + 1) # because the index is from 0 
-    -sum(log.(conv_result[ind] .+ 1e-6))*f.weight # add a small quantity to avoid log(0)
+    -sum(log.(condDist[ind] .+ 1e-6))*f.weight # add a small quantity to avoid log(0)
 end
 
 function (f::LsqSurvival)(estimate_signal::AbstractVector{T}, ref_signal::Tuple{Vector,Vector}; kwargs...) where T
