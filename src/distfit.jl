@@ -8,11 +8,11 @@ abstract type AbstractDistanceFitRNAandBurst end
 struct LikelihoodRNA <: AbstractDistanceFitRNA 
     weight::Float32
 end
-struct LiikelihoodConvolutedRNA <: AbstractDistanceFitRNA 
+struct LikelihoodConvolutedRNA <: AbstractDistanceFitRNA 
     weight::Float32
 end
 
-struct LiikelihoodConvolutedConditionalRNA <: AbstractDistanceFitRNA 
+struct LikelihoodConvolutedConditionalRNA <: AbstractDistanceFitRNA 
     weight::Float32
     condition::Int64 # the condition is #mRNA>=condition
 end
