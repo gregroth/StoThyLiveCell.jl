@@ -643,6 +643,21 @@ function (f::Distribution_RNA)(dataidx::Int, optimstruct::OptimStructWrapper)
     @unpack Qrna = utileMat
     return distribution_mrna(Qrna, maxrnaFC, model.nbstate)
 end
+
+function (f::convolutedDistribution_RNA)(dataidx::Int, optimstruct::OptimStructWrapper)
+    @unpack utileMat, maxrnaFC, model = optimstruct
+    @unpack Qrna = utileMat
+    rna_dist = distribution_mrna(Qrna, maxrnaFC, model.nbstate)
+    #convolution of two independend distributions
+    conv_result = zeros(Float64, 2*length(rna_dist) - 1)
+    for i in eachindex(rna_dist)
+        for j in eachindex(rna_dist)
+            conv_result[i + j - 1] += rna_dist[i] * rna_dist[j]
+        end
+    end
+    return conv_result
+end
+
 #= 
 function (f::Distribution_RNA)(dataidx::Int, parameters::AbstractVector{T}, optimstruct::OptimStructWrapper) where T
     @unpack maxrnaFC, model = optimstruct
