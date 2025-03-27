@@ -337,22 +337,23 @@ end
 
 function ini_data(optim_struct::OptimStruct, FRange; kwargs...)
     @unpack data = optim_struct
-    datafit = data.data
+    datafit = ()
     for i in eachindex(FRange)
         if (FRange[i][2]>0) & !(data.datatypes[i] == StoThyLiveCell.Distribution_RNA()) & !(data.datatypes[i] == StoThyLiveCell.ConvolutedDistribution_RNA())
             llimit = findfirst(data.data[i][1] .>=FRange[i][1])
             ulimit = findlast(data.data[i][1] .<=FRange[i][2])
-            datafit[i] .= (data.data[i][1][llimit:ulimit], data.data[i][2][llimit:ulimit],) 
+            datatemp = (data.data[i][1][llimit:ulimit], data.data[i][2][llimit:ulimit],) 
             if minimum(datatemp[2])<=0
                 @warn "There are survival probabilities equal or below zero"
             end
         elseif data.datatypes[i] == StoThyLiveCell.Distribution_RNA()
-            datatfit[i] .= data.data[i][(data.data[i] .>=FRange[i][1]) .& (data.data[i] .<=FRange[i][2])]
+            datatemp = data.data[i][(data.data[i] .>=FRange[i][1]) .& (data.data[i] .<=FRange[i][2])]
         elseif data.datatypes[i] == StoThyLiveCell.ConvolutedDistribution_RNA()
-            datatfit[i] .= data.data[i][(data.data[i] .>=FRange[i][1]) .& (data.data[i] .<=FRange[i][2])]
+            datatemp = data.data[i][(data.data[i] .>=FRange[i][1]) .& (data.data[i] .<=FRange[i][2])]
         else
-            datatfit[i] .= data.data[i]
+            datatemp = data.data[i]
         end
+        datafit = (datafit..., datatemp)
     end
     return StoThyLiveCell.DataFit{typeof(data.datatypes),typeof(data.data)}(data.datatypes, data.datagroup, Tuple(datafit), data.detectionLimitLC, data.detectionLimitNS, data.burstsinglet)
 
