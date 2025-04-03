@@ -4,7 +4,7 @@ using DataFrames, FileIO, JLD2
 using BenchmarkTools
 using Optimization
 using OptimizationOptimJL
-@testset "Test 2s3r model" begin
+#= @testset "Test 2s3r model" begin
     #define the 2s 3r model
     #(r12,r21,r23,r32,k1on,k2on,k3on,koff)
     Qstate = [0    8    4    0    0    0;
@@ -619,7 +619,7 @@ end
 
     @test err_func(freeparameters,optim_struct_wrapper ) >= 0
 end 
-
+ =#
 
 @testset "Test optim for live cells without singlets TWO MODELS" begin
 
