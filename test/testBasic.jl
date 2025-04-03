@@ -665,11 +665,19 @@ end
 
     FRange_m1 = [(0,200),(0,7),(0,0),(0,0),(0,0),]
     FRange_m2 = [(0,7),]
-    fixedparameters = [-1]
-    #indices of the free parameters
-    freeparametersidx = [1,2,3,4,5,6,7,8,9,10,11]
+   
+    
+    freeparametersidx_m1 =[1,2,3,4,5,6,7,8,9,10]
+    freeparametersidx_m2 =[1,2,3,4,5,6,7,8,9,10]
+ 
+    paramidx_m1=[1,2,3,4,5,6,7,8,9,10]
+    paramidx_m2=[11,2,3,4,5,6,7,8,9,10]
+    
+    fixedparameters_m1 =[-1]
+    fixedparameters_m2 =[-1]
 
-    sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function_multipleModels(SRange, FRange_m1,FRange_m2, optimtest_m1, optimtest_m2; NbOptim=2, maxtime=1, maxiters=1,fixedparameters=fixedparameters,  freeparametersidx=freeparametersidx, paramidx_m1=collect(1:10), paramidx_m2=vcat([11],collect(2:10)), maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC,Method=SAMIN())
+
+    sol, bfparameters, minval, minidx, estimate_signal = StoThyLiveCell.optim_function_multipleModels(SRange, FRange_m1,FRange_m2, optimtest_m1, optimtest_m2; NbOptim=2, maxtime=1, maxiters=1,freeparametersidx_m1 =freeparametersidx_m1, freeparametersidx_m2 =freeparametersidx_m2, fixedparameters_m1 =fixedparameters_m1, fixedparameters_m2 =fixedparameters_m2, paramidx_m1=paramidx_m1, paramidx_m2=paramidx_m2, maxrnaLC=maxrnaLC, maxrnaFC=maxrnaFC,Method=SAMIN())
 
     println(sol[1].objective)
     @test typeof(sol[2].u) <: Vector
