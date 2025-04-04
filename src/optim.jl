@@ -198,8 +198,9 @@ function optim_function_multipleModels(SRange, FRange_model1, FRange_model2, opt
     #bestfit parameters
     fvals = [sol[i].objective for i in eachindex(sol)] #collect all the optimization objective fct values
     minval, minidx = findmin(fvals)
-    bfparameters= utiles.mergeparameter_base(vcat(fixedparameters_model1,fixedparameters_model2), sol[minidx].u, union(freeparametersidx_m1,freeparametersidx_m2))
-    bfparameters_m1 = bfparameters[paramidx_m1]
+    bfparameters_m1= utiles.mergeparameter_base(fixedparameters_model1, sol[minidx].u[paramidx_m1], freeparametersidx_m1)
+    bfparameters_m2= utiles.mergeparameter_base(fixedparameters_model2, sol[minidx].u[paramidx_m2], freeparametersidx_m2)
+
     #bestfit signal
     if optim_struct_model1.data.burstsinglet == :with
         if optim_struct_model1.data.datagroup == LiveCellData()
@@ -218,10 +219,10 @@ function optim_function_multipleModels(SRange, FRange_model1, FRange_model2, opt
     elseif optim_struct_model1.data.burstsinglet == :without
         if optim_struct_model1.data.datagroup == LiveCellData()
             (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput_wosinglet(optim_struct_wrapper_m1.model, bfparameters_m1, maxrnaLC, optim_struct_wrapper_m1.data_fit.detectionLimitLC, optim_struct_wrapper_m1.data_fit.detectionLimitNS, 10,400,400,10) 
-            bfparameters_mrna = vcat(bfparameters[1:end-1],.01)
+            bfparameters_mrna = vcat(bfparameters_m1[1:end-1],.01)
             mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper_m1.model, bfparameters_mrna, optim_struct_wrapper_m1.maxrnaFC) 
         elseif optim_struct_model1.data.datagroup == FixedCellData()
-            bfparameters_lc = vcat(bfparameters[1:end-1],1.)
+            bfparameters_lc = vcat(bfparameters_m1[1:end-1],1.)
             (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper_m1.model,bfparameters_lc, maxrnaLC, optim_struct_wrapper_m1.data_fit.detectionLimitLC, optim_struct_wrapper_m1.data_fit.detectionLimitNS, 10,400,400,10)  
             mrna_distribution_model = StoThyLiveCell.distribution_mrna(optim_struct_wrapper_m1.model, bfparameters, optim_struct_wrapper_m1.maxrnaFC) 
         elseif optim_struct_model1.data.datagroup == FixedAndLiveCellData()
@@ -231,7 +232,7 @@ function optim_function_multipleModels(SRange, FRange_model1, FRange_model2, opt
         end
     end
     estimate_signal = (survival_burst = survival_burst, survival_interburst = survival_interburst, survival_nextburst = survival_nextburst, prob_burst = prob_burst, mean_nascentrna = mean_nascentrna, correlation_interburst = correlation_interburst, intensity_burst = intensity_burst, mrna_distribution = mrna_distribution_model)    
-    return sol, bfparameters, minval, minidx, estimate_signal
+    return sol, (bfparameters_m1,bfparameters_m2), minval, minidx, estimate_signal
 end
 
 
@@ -292,8 +293,8 @@ function start_optim(optim_struct_wrapper::Tuple{OptimStructWrapper,OptimStructW
 
     lbfull = [SRange[i][1] for i in eachindex(SRange)]
     ubfull = [SRange[i][2] for i in eachindex(SRange)]
-    lb = lbfull[union(optim_struct_wrapper[1].freeparametersidx,optim_struct_wrapper[2].freeparametersidx)]
-    ub = ubfull[union(optim_struct_wrapper[1].freeparametersidx,optim_struct_wrapper[2].freeparametersidx)]
+    lb = lbfull[union(paramidx_m1[optim_struct_wrapper[1].freeparametersidx],paramidx_m2[optim_struct_wrapper[2].freeparametersidx])]
+    ub = ubfull[union(paramidx_m1[optim_struct_wrapper[1].freeparametersidx],paramidx_m2[optim_struct_wrapper[2].freeparametersidx])]
     db = ub - lb
     sol = []
     if isempty(initialparameters)
