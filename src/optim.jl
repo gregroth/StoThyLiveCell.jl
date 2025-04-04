@@ -198,8 +198,8 @@ function optim_function_multipleModels(SRange, FRange_model1, FRange_model2, opt
     #bestfit parameters
     fvals = [sol[i].objective for i in eachindex(sol)] #collect all the optimization objective fct values
     minval, minidx = findmin(fvals)
-    bfparameters_m1= utiles.mergeparameter_base(fixedparameters_model1, sol[minidx].u[paramidx_m1], freeparametersidx_m1)
-    bfparameters_m2= utiles.mergeparameter_base(fixedparameters_model2, sol[minidx].u[paramidx_m2], freeparametersidx_m2)
+    bfparameters_m1= utiles.mergeparameter_base(fixedparameters_model1, sol[minidx].u[pm1_infreeparam], freeparametersidx_m1)
+    bfparameters_m2= utiles.mergeparameter_base(fixedparameters_model2, sol[minidx].u[pm2_infreeparam], freeparametersidx_m2)
 
     #bestfit signal
     if optim_struct_model1.data.burstsinglet == :with
