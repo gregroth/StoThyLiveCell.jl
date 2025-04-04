@@ -124,7 +124,7 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
     return sol, bfparameters, minval, minidx, estimate_signal
 end
 
-function optim_function_multipleModels(SRange, FRange_model1, FRange_model2, optim_struct_model1::OptimStruct,optim_struct_model2::OptimStruct, args...; maxrnaLC = 10, maxrnaFC = 60, freeparametersidx_m1 =[-1], freeparametersidx_m2 =[-1], fixedparameters_m1 =[-1], fixedparameters_m2 =[-1], paramidx_m1=[-1], paramidx_m2=[-1],  kwargs...)
+function optim_function_multipleModels(SRange, FRange_model1, FRange_model2, optim_struct_model1::OptimStruct,optim_struct_model2::OptimStruct, args...; maxrnaLC = 10, maxrnaFC = 60, freeparametersidx_m1 =[-1], freeparametersidx_m2 =[-1], fixedparameters_m1 =[-1], fixedparameters_m2 =[-1], paramidx_m1=[-1], paramidx_m2=[-1], pm1_infreeparam=[-1], pm2_infreeparam=[-1],  kwargs...)
     @unpack AutoDiff = optim_struct_model1
 
 
@@ -193,7 +193,7 @@ function optim_function_multipleModels(SRange, FRange_model1, FRange_model2, opt
         end
     end
     #run the optimization
-    sol = start_optim((optim_struct_wrapper_m1,optim_struct_wrapper_m2,),args...; paramidx_m1=paramidx_m1, paramidx_m2=paramidx_m2, kwargs...)
+    sol = start_optim((optim_struct_wrapper_m1,optim_struct_wrapper_m2,),args...; paramidx_m1=paramidx_m1, paramidx_m2=paramidx_m2,pm1_infreeparam=pm1_infreeparam, pm2_infreeparam=pm2_infreeparam, kwargs...)
 
     #bestfit parameters
     fvals = [sol[i].objective for i in eachindex(sol)] #collect all the optimization objective fct values
@@ -284,11 +284,11 @@ function start_optim(optim_struct_wrapper::OptimStructWrapper, args...; NbOptim:
 end
 
 
-function start_optim(optim_struct_wrapper::Tuple{OptimStructWrapper,OptimStructWrapper}, args...; paramidx_m1=[-1], paramidx_m2=[-1], NbOptim::Int=1, maxtime::Int=1, maxiters::Int=1 , initialparameters = [],Method=BBO_adaptive_de_rand_1_bin_radiuslimited(), ADmethod=AutoForwardDiff(), pathToLog="", kwargs...)
+function start_optim(optim_struct_wrapper::Tuple{OptimStructWrapper,OptimStructWrapper}, args...; paramidx_m1=[-1], paramidx_m2=[-1],pm1_infreeparam=[-1], pm2_infreeparam=[-1], NbOptim::Int=1, maxtime::Int=1, maxiters::Int=1 , initialparameters = [],Method=BBO_adaptive_de_rand_1_bin_radiuslimited(), ADmethod=AutoForwardDiff(), pathToLog="", kwargs...)
     @unpack SRange = optim_struct_wrapper[1]
 
     function err_func(params,optim_struct_wrapper::Tuple{OptimStructWrapper,OptimStructWrapper})
-        return optim_struct_wrapper[1].err_func(params[paramidx_m1[optim_struct_wrapper[1].freeparametersidx]], optim_struct_wrapper[1]) + optim_struct_wrapper[2].err_func(params[paramidx_m2[optim_struct_wrapper[2].freeparametersidx]], optim_struct_wrapper[2])
+        return optim_struct_wrapper[1].err_func(params[pm1_infreeparam], optim_struct_wrapper[1]) + optim_struct_wrapper[2].err_func(params[pm2_infreeparam], optim_struct_wrapper[2])
     end
 
     lbfull = [SRange[i][1] for i in eachindex(SRange)]
