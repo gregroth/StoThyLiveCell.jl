@@ -288,8 +288,6 @@ function start_optim(optim_struct_wrapper::Tuple{OptimStructWrapper,OptimStructW
     @unpack SRange = optim_struct_wrapper[1]
 
     function err_func(params,optim_struct_wrapper::Tuple{OptimStructWrapper,OptimStructWrapper})
-        println(paramidx_m1)
-        println(optim_struct_wrapper[1].freeparametersidx)
         return optim_struct_wrapper[1].err_func(params[paramidx_m1[optim_struct_wrapper[1].freeparametersidx]], optim_struct_wrapper[1]) + optim_struct_wrapper[2].err_func(params[paramidx_m2[optim_struct_wrapper[2].freeparametersidx]], optim_struct_wrapper[2])
     end
 
