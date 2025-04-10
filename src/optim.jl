@@ -491,7 +491,7 @@ function ini_optim(optim_struct::OptimStruct, datagroup::LiveCellData; kwargs...
 end
 
 
-function ini_optim_multipleDistribution(optim_struct::OptimStruct, datagroup::LiveCellData; kwargs...)
+function ini_optim_multipleDistribution(optim_struct::OptimStruct, datagroup::FixedCellData; kwargs...)
     function err_func(params,optim_struct_wrapper::OptimStructWrapper)
         parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
         estimate_signal = parameters[end-1]*parameters[end].*distribution_mrna(model, parameters[1:4], optim_struct_wrapper.maxrnaFC) .+ parameters[end-1]*(1-parameters[end]).*distribution_mrna(model, vcat(parameters[5],parameters[2:4]), optim_struct_wrapper.maxrnaFC)
