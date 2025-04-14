@@ -44,7 +44,7 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
     @unpack data, dist, model, AutoDiff = optim_struct
     if multipledistribution
         err_func = ini_optim_multipleDistribution(optim_struct, optim_struct.data.datagroup)
-
+println("optim test")
         data_fit = ini_data(optim_struct, FRange)
 
         (P,ssp, stateTr, stateTr_on, stateAbs_on, weightsTr_off,PabsOff, sspTr_Off, Pabs ) = StoThyLiveCell.mo_basics(model, ones(model.nbparameters+model.nbkini+1), maxrnaLC, data.detectionLimitLC, data.detectionLimitNS) 
