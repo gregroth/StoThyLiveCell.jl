@@ -61,6 +61,7 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
             bfparameters_lc = vcat(bfparameters[1:3],1.)
             (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper.model,bfparameters_lc, maxrnaLC, optim_struct_wrapper.data_fit.detectionLimitLC, optim_struct_wrapper.data_fit.detectionLimitNS,10,400,400,10)  
             mrna_distribution_model = bfparameters[end-1]*bfparameters[end].*distribution_mrna(optim_struct_wrapper.model, bfparameters[1:4], optim_struct_wrapper.maxrnaFC) .+ bfparameters[end-1]*(1-bfparameters[end]).*distribution_mrna(optim_struct_wrapper.model, vcat(bfparameters[5:7],bfparameters[4]), optim_struct_wrapper.maxrnaFC)
+            mrna_distribution_model[1] = mrna_distribution_model[1] + bfparameters[end-1]
         else
             @warn "optim not defined"
         end
