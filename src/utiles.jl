@@ -47,4 +47,14 @@ function mergeparameter_base(fixedparameter, freeparameter::AbstractVector{T}, f
     end
 end    
 
+function convolution(dist::Vector{Float64})
+    conv = zeros(Float64, 2*length(dist) - 1)
+    for i in eachindex(dist)
+        for j in eachindex(dist)
+            conv[i + j - 1] += dist[i] * dist[j]
+        end
+    end
+    return conv
+end
+
 end
