@@ -60,8 +60,10 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
         if data.datagroup == FixedCellData()
             bfparameters_lc = vcat(bfparameters[1:3],1.)
             (survival_burst, survival_interburst, survival_nextburst, prob_burst, mean_nascentrna, correlation_interburst, intensity_burst) =    StoThyLiveCell.ModelOutput(optim_struct_wrapper.model,bfparameters_lc, maxrnaLC, optim_struct_wrapper.data_fit.detectionLimitLC, optim_struct_wrapper.data_fit.detectionLimitNS,10,400,400,10)  
-            mrna_distribution_model = bfparameters[end-1]*bfparameters[end].*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, bfparameters[1:4], optim_struct_wrapper.maxrnaFC)) .+ bfparameters[end-1]*(1-bfparameters[end]).*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, vcat(bfparameters[5:7],bfparameters[4]), optim_struct_wrapper.maxrnaFC))
-            mrna_distribution_model[1] = mrna_distribution_model[1] + (1-bfparameters[end-1])
+            #mrna_distribution_model = bfparameters[end-1]*bfparameters[end].*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, bfparameters[1:4], optim_struct_wrapper.maxrnaFC)) .+ bfparameters[end-1]*(1-bfparameters[end]).*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, vcat(bfparameters[5:7],bfparameters[4]), optim_struct_wrapper.maxrnaFC))
+            #mrna_distribution_model[1] = mrna_distribution_model[1] + (1-bfparameters[end-1])
+            mrna_distribution_model = (1-bf_parameters[end-1]).* utiles.convolution(bf_parameters[8].^(0:1:optim_struct_wrapper.maxrnaFC).*exp(-bf_parameters[8])./factorial.(0:1:optim_struct_wrapper.maxrnaFC)).+ bfparameters[end-1]*bfparameters[end].*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, bfparameters[1:4], optim_struct_wrapper.maxrnaFC)) .+ bfparameters[end-1]*(1-bfparameters[end]).*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, vcat(bfparameters[5:7],bfparameters[4]), optim_struct_wrapper.maxrnaFC))
+
         else
             @warn "optim not defined"
         end
@@ -495,8 +497,10 @@ end
 function ini_optim_multipleDistribution(optim_struct::OptimStruct, datagroup::FixedCellData; kwargs...)
     function err_func(params,optim_struct_wrapper::OptimStructWrapper)
         parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
-        estimate_signal = parameters[end-1]*parameters[end].*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, parameters[1:4], optim_struct_wrapper.maxrnaFC)) .+ parameters[end-1]*(1-parameters[end]).*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, vcat(parameters[5:7],parameters[4]), optim_struct_wrapper.maxrnaFC))
-        estimate_signal[1] = estimate_signal[1] + (1-parameters[end-1])
+        #estimate_signal = parameters[end-1]*parameters[end].*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, parameters[1:4], optim_struct_wrapper.maxrnaFC)) .+ parameters[end-1]*(1-parameters[end]).*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, vcat(parameters[5:7],parameters[4]), optim_struct_wrapper.maxrnaFC))
+        #estimate_signal[1] = estimate_signal[1] + (1-parameters[end-1])
+        estimate_signal = (1-parameters[end-1]).* utiles.convolution(parameters[8].^(0:1:optim_struct_wrapper.maxrnaFC).*exp(-parameters[8])./factorial.(0:1:optim_struct_wrapper.maxrnaFC)).+ parameters[end-1]*parameters[end].*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, parameters[1:4], optim_struct_wrapper.maxrnaFC)) .+ parameters[end-1]*(1-parameters[end]).*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, vcat(parameters[5:7],parameters[4]), optim_struct_wrapper.maxrnaFC))
+
         return optim_struct_wrapper.dist[1](estimate_signal, optim_struct_wrapper.data_fit.data[1])    
     end
     return err_func
