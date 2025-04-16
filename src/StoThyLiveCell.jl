@@ -5,6 +5,7 @@ using ExponentialUtilities
 using DocStringExtensions
 using UnPack
 using Logging
+using Distributions
 
 using Optimization
 using OptimizationOptimJL
