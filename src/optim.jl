@@ -499,7 +499,7 @@ function ini_optim_multipleDistribution(optim_struct::OptimStruct, datagroup::Fi
         parameters = utiles.mergeparameter_base(optim_struct_wrapper.fixedparam, params, optim_struct_wrapper.freeparametersidx)
         #estimate_signal = parameters[end-1]*parameters[end].*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, parameters[1:4], optim_struct_wrapper.maxrnaFC)) .+ parameters[end-1]*(1-parameters[end]).*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, vcat(parameters[5:7],parameters[4]), optim_struct_wrapper.maxrnaFC))
         #estimate_signal[1] = estimate_signal[1] + (1-parameters[end-1])
-        estimate_signal = (1-bf_parameters[end-1]).* utiles.convolution(pdf.(Poisson(parameters[8]), 0:1:optim_struct_wrapper.maxrnaFC)).+ parameters[end-1]*parameters[end].*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, parameters[1:4], optim_struct_wrapper.maxrnaFC)) .+ parameters[end-1]*(1-parameters[end]).*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, vcat(parameters[5:7],parameters[4]), optim_struct_wrapper.maxrnaFC))
+        estimate_signal = (1-parameters[end-1]).* utiles.convolution(pdf.(Poisson(parameters[8]), 0:1:optim_struct_wrapper.maxrnaFC)).+ parameters[end-1]*parameters[end].*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, parameters[1:4], optim_struct_wrapper.maxrnaFC)) .+ parameters[end-1]*(1-parameters[end]).*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, vcat(parameters[5:7],parameters[4]), optim_struct_wrapper.maxrnaFC))
 
         return optim_struct_wrapper.dist[1](estimate_signal, optim_struct_wrapper.data_fit.data[1])    
     end
