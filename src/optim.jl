@@ -75,6 +75,7 @@ function optim_function(SRange, FRange, optim_struct::OptimStruct, args...; maxr
             elseif multipledistributiontypes==2220
                 mrna_distribution_model = (1-bfparameters[end-1]).* utiles.convolution(distribution_mrna(optim_struct_wrapper.model, vcat(bfparameters[6],bfparameters[2:4]), optim_struct_wrapper.maxrnaFC)) .+ bfparameters[end-1]*bfparameters[end].*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, bfparameters[1:4], optim_struct_wrapper.maxrnaFC)) .+ bfparameters[end-1]*(1-bfparameters[end]).*utiles.convolution(distribution_mrna(optim_struct_wrapper.model, vcat(bfparameters[5],bfparameters[2:4]), optim_struct_wrapper.maxrnaFC))
             end
+            
         else
             @warn "optim not defined"
         end
